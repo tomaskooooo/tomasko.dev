@@ -2,8 +2,8 @@
   'use strict';
 
   /* ---- edit these two lines ---- */
-  var EMAIL = 'YOUR@EMAIL';
-  var LINKEDIN = ''; // e.g. 'https://www.linkedin.com/in/your-name'
+  var EMAIL = 'tomas.dobos01@gmail.com';
+  var LINKEDIN = 'https://www.linkedin.com/in/larping/';
   /* ------------------------------ */
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -107,7 +107,11 @@
       }
       var body = msg + '\n\n' + name + '\n' + email;
       window.location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Hello from ' + name) + '&body=' + encodeURIComponent(body);
-      note.textContent = 'Opening your mail app…';
+      note.textContent = 'Opening your mail app… If nothing opens, write to ';
+      var fallback = document.createElement('a');
+      fallback.href = 'mailto:' + EMAIL;
+      fallback.textContent = EMAIL;
+      note.appendChild(fallback);
     });
   }
 
