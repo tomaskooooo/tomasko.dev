@@ -647,8 +647,8 @@ def write_headers():
             {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"},
             {"key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains"},
             {"key": "Cross-Origin-Opener-Policy", "value": "same-origin"}]},
-        {"source": "/assets/(.*)", "headers": [{"key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400"}]},
-        {"source": "/(style\.css|script\.js)", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800"}]},
+        {"source": "/assets/(.*)", "headers": [{"key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400"}]},
+        {"source": "/(style\.css|script\.js)", "headers": [{"key": "Cache-Control", "value": "public, max-age=0, must-revalidate"}]},
     ]}
     with open(os.path.join(ROOT, "vercel.json"), "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
@@ -686,7 +686,7 @@ def page(p, idx):
 <meta name="theme-color" content="#e5541f">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
 <link rel="preload" as="font" type="font/woff2" href="../assets/fonts/inter-tight-latin.woff2" crossorigin>
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../style.css?v=2">
 <script>{INLINE_JS}</script>
 </head>
 <body class="pg">
@@ -734,7 +734,7 @@ def page(p, idx):
   <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="/#contact">Get in touch</a></div>
 </footer>
 
-<script src="../script.js"></script>
+<script src="../script.js?v=2"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
