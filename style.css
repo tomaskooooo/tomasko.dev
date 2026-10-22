@@ -495,3 +495,7 @@ h2 { font: 800 clamp(2.2rem, 5.8vw, 4.8rem)/0.98 var(--font); letter-spacing: -0
 .cf-note a { color: var(--orange-ink); text-decoration: underline; text-underline-offset: 0.2em; }
 .contact-copy .contact-direct { max-width: none; font-size: 0.95rem; color: #fff; }
 .contact-direct a { display: inline-block; padding: 0.5rem 0; color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 0.25em; }
+
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.cf-fine { margin: -0.3rem 0 0; font: 500 0.75rem/1.4 var(--font); color: var(--muted); text-align: center; }
+.card-form button:disabled { opacity: 0.6; cursor: progress; }

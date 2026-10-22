@@ -636,7 +636,7 @@ def jsonld(p):
 def write_headers():
     digest = "sha256-" + base64.b64encode(hashlib.sha256(INLINE_JS.encode("utf-8")).digest()).decode()
     csp = ("default-src 'self'; script-src 'self' '" + digest + "'; style-src 'self' 'unsafe-inline'; "
-           "font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
+           "font-src 'self'; img-src 'self' data:; connect-src 'self' https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'; "
            "form-action 'self'; object-src 'none'")
     cfg = {"cleanUrls": True, "headers": [
         {"source": "/(.*)", "headers": [

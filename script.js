@@ -92,26 +92,44 @@
   window.addEventListener('resize', updateWords);
   requestAnimationFrame(onScroll);
 
-  /* contact form opens the visitor's mail app */
+  /* contact form: sends through FormSubmit (no server of my own); falls back to the plain address */
   var form = document.getElementById('form');
   var note = document.getElementById('formNote');
+  function say(text, withAddress) {
+    note.textContent = text;
+    if (!withAddress) return;
+    var a = document.createElement('a');
+    a.href = 'mailto:' + EMAIL;
+    a.textContent = EMAIL;
+    note.appendChild(a);
+  }
   if (form) {
+    var send = form.querySelector('button[type="submit"]');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var name = form.elements.name.value.trim();
       var email = form.elements.email.value.trim();
       var msg = form.elements.message.value.trim();
-      if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
-        note.textContent = 'Please add your name and a valid e-mail.';
-        return;
-      }
-      var body = msg + '\n\n' + name + '\n' + email;
-      window.location.href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Hello from ' + name) + '&body=' + encodeURIComponent(body);
-      note.textContent = 'Opening your mail app… If nothing opens, write to ';
-      var fallback = document.createElement('a');
-      fallback.href = 'mailto:' + EMAIL;
-      fallback.textContent = EMAIL;
-      note.appendChild(fallback);
+      if (!name || !/^\S+@\S+\.\S+$/.test(email)) { say('Please add your name and a valid e-mail.'); return; }
+      if (msg.length < 3) { say('Please write a short message.'); return; }
+      if (form.elements._honey && form.elements._honey.value) { say('Thanks! Your message was sent.'); return; }  // bots fill the hidden field
+      var label = send.textContent;
+      send.disabled = true; send.textContent = 'Sending…'; form.setAttribute('aria-busy', 'true');
+      fetch('https://formsubmit.co/ajax/' + EMAIL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, message: msg, _subject: 'Portfolio message from ' + name, _template: 'table', _captcha: 'false' })
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (res) {
+          if (res && (res.success === true || res.success === 'true')) {
+            form.reset();
+            say('Thanks! Your message was sent. I will reply to ' + email + '.');
+          } else {
+            say('Could not send it from here. Please write to ', true);
+          }
+        })
+        .catch(function () { say('Could not send it from here. Please write to ', true); })
+        .then(function () { send.disabled = false; send.textContent = label; form.removeAttribute('aria-busy'); });
     });
   }
 
