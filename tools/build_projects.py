@@ -232,102 +232,243 @@ PROJECTS.append(dict(
     kicker="Voice assistant · local AI · Slovak",
     lead="A voice assistant for my school with a face: an animated mountaineer portrait of the patron, Pier Giorgio Frassati. You talk to it in Slovak with no button, and it answers out loud and in a speech bubble. It runs on local models, and no recordings or transcripts are stored.",
     cover="pier-ai.webp",
-    meta=[("Role", "Designer, developer, model trainer"), ("Timeline", "Oct 2026"), ("Status", "Running on Windows; Raspberry Pi version prepared"),
-          ("Stack", "Python, sherpa-onnx, Ollama, Gemma 4 (LoRA), Piper, SVG and JS")],
+    meta=[("Role", "Designer, developer, model trainer"), ("Timeline", "Oct 2026 (state as of 19 Oct)"), ("Status", "Running on Windows; Raspberry Pi bundle prepared, not yet run on a real Pi"),
+          ("Stack", "Python, sherpa-onnx, Ollama, Gemma 4 (LoRA), Piper, OmniVoice, SVG and JS")],
     links=[],
     next=("song-finder", "Song finder"),
     sections=[
-        ("overview", "Overview", f"""
+        ("overview", "Overview", '''
 <p>Pier AI is the voice of CSOŠE, the Frassati church technical secondary school in Bratislava. Students talk to it in Slovak. It knows facts about the school, tells the time and the bell schedule, reads out the timetable, gives the weather, answers questions from the curriculum and tells jokes. It deliberately refuses to answer what it has no verified answer for.</p>
-<p>The mascot is the school's patron, Pier Giorgio Frassati, drawn as the mountaineer he was. The sky behind him follows the real Bratislava sun, so the scene changes through the day.</p>
-"""),
-        ("goal", "The goal and the constraint", """
-<p>The decision I made early was that everything must run on a Raspberry Pi 5 (8 GB) with no PC, so a school could put it on a wall without a gaming machine or a cloud bill. That one constraint shaped every other choice: a small model, CPU speech recognition, and no dependence on paid services.</p>
-<p>Today the full version runs on my home PC (RTX 3060) with a male voice. A Raspberry Pi package is prepared, but I have not yet run it on a real Pi, and I say so on purpose.</p>
-"""),
-        ("pipeline", "What happens when you ask a question", f"""
-{steps([
-    "<b>Listen.</b> The microphone is always on. No button is needed; the app detects speech.",
-    "<b>Transcribe.</b> Parakeet-sk (int8, via sherpa-onnx) turns Slovak speech into text on the CPU. Audio is never written to disk.",
-    "<b>Fix names.</b> Speech models mangle names (\"farsati\"), so the transcript is corrected to Frassati and similar.",
-    "<b>Route.</b> Python checks, in order: is this a time or date question, a \"what does this word mean\" question for a non-Slovak word, a single unclear word, a topic outside the allowed ones, or a timetable and bell question.",
-    "<b>Retrieve.</b> Otherwise the two closest verified answers from a 414-entry knowledge file are found by text similarity and put into the prompt.",
-    "<b>Generate.</b> The local language model answers in a sentence or two, streaming sentence by sentence.",
-    "<b>Clean up.</b> A spell-fix pass restores missing diacritics and common small-model mistakes, only when the correction is unambiguous.",
-    "<b>Speak.</b> Each sentence is sent to a text-to-speech service that returns audio for the speaker.",
-    "<b>Show.</b> The screen is a web page; the app streams state changes to it over server-sent events, and the face moves its mouth, eyes and head to match.",
-])}
-"""),
-        ("components", "Components", table(["Part", "What it does"], [
-    ["Speech recognition", "Parakeet-sk int8 through sherpa-onnx, CPU only, roughly 0.7 GB"],
-    ["Language model", "pier-e2b: a fine-tuned and pruned Gemma 4 E2B, 1.6 GB, served by Ollama"],
-    ["Verified answers", "414 hand-written question and answer pairs, retrieved by similarity"],
-    ["Voice", "OmniVoice (male, needs an NVIDIA GPU) or Piper \"lili\" (female, runs on CPU)"],
-    ["Spell fix", "Rule-based correction with a Slovak Hunspell dictionary"],
-    ["Time, bells, timetable, weather", "Computed in Python from the clock, the school's EduPage data and Open-Meteo, never guessed by the model"],
-    ["Window", "A full-screen web page with an SVG character, sky and clock"],
-    ["School facts", "Plain text files that a teacher could edit"],
+<p>The mascot is the school's patron, Pier Giorgio Frassati, drawn as the mountaineer he was. The sky behind him follows the real Bratislava sun, so the scene changes through the day. On Windows the app is a double-click icon; it opens a window, <code>F</code> or a double-click makes it full screen, and it shuts itself down when the window closes.</p>
+''' + table(["At a glance", ""], [
+    ["Language model", "pier-e2b, a fine-tuned and pruned Gemma 4 E2B, Q4_K_M, 1.55 GB (Apache-2.0)"],
+    ["Prompt", "about 1,000 tokens, plus the 2 closest verified answers"],
+    ["Verified answers", "414 hand-written question and answer pairs"],
+    ["Quality", "98 of 105 on a test the model never saw; 2.2% unknown words"],
+    ["Speed on a simulated Pi", "9 s to read the prompt at start; 1.5 to 3.1 s from the end of a question to the first text"],
+    ["Raspberry Pi estimate (not measured)", "about 30 s to start, 5 to 10 s per answer, about 4 GB of 8 GB memory"],
+    ["Ports", "8765 for the screen (state over SSE), 8008 for the voice service"],
+    ["Code", "about 730 lines in the main program, plus prompt, retrieval, spell-fix and timetable modules"],
 ])),
-        ("model", "Making a small model speak good Slovak", f"""
+        ("goal", "The goal and the constraint", '''
+<p>The decision I made early was that everything must run on a Raspberry Pi 5 (8 GB) with no PC, so a school could put it on a wall without a gaming machine or a cloud bill. That one constraint shaped every other choice: a small model, CPU speech recognition, and no dependence on paid services.</p>
+<p>Today the full version runs on my home PC (RTX 3060) with a male voice. A Raspberry Pi package is prepared, but I have not yet run it on a real Pi, and I say so on purpose. What I have verified is the syntax of the scripts, a simulation of the Pi on a PC without a GPU, and a remote voice.</p>
+'''),
+        ("pipeline", "What happens when you ask a question", steps([
+    "<b>Listen.</b> The microphone is always on. No button is needed; the app detects speech. The detection threshold (<code>SPEECH_RMS</code>) is tuned for a headset on the PC.",
+    "<b>Transcribe.</b> Parakeet-sk (int8, via sherpa-onnx) turns Slovak speech into text on the CPU. Audio is never written to disk.",
+    "<b>Fix names.</b> <code>fix_names</code> corrects speech-model mistakes such as \"farsati\" to Frassati.",
+    "<b>Route.</b> In <code>turn()</code> the question goes through these checks, in this order: <code>clock_answer</code> (time and date), <code>unknown_word_answer</code> (\"what does the word X mean\" when X is not Slovak), <code>unclear_answer</code> (one word that is not a greeting), <code>strict_answer</code> (strict mode), and <code>timetable.answer</code> (timetable and bells, computed by Python).",
+    "<b>Retrieve.</b> Otherwise the two closest verified answers from <code>data/znalosti.jsonl</code> are found by text similarity (minimum 0.40) and added to the prompt.",
+    "<b>Generate.</b> The local language model answers in a sentence or two at temperature 0.3, streaming sentence by sentence (<code>stream_llm</code>).",
+    "<b>Clean up.</b> <code>spellfix.fix</code> restores missing diacritics and common small-model mistakes, only when the correction is unambiguous.",
+    "<b>Speak.</b> Each sentence goes to the voice service with <code>POST /speak</code>, which returns a WAV that <code>sounddevice</code> plays.",
+    "<b>Show.</b> The screen is a web page at <code>http://localhost:8765</code>; the app streams state changes to it over server-sent events, and the face moves its mouth, eyes and head to match.",
+])),
+        ("routing", "Routing and strict mode", '''
+<p>Strict mode (<code>PIER_STRICT=1</code>, on by default) is the most important safety decision. The model may answer freely only on topics that were verified: the school, the patron, the weather, jokes, greetings, facts about Pier himself, the rules and places in the building. This is a regular expression, <code>ALLOWED_TOPICS</code>. Anything else gets a fixed answer saying there is no verified answer.</p>
+''' + ul([
+    "<b>Why.</b> A small model outside its collection makes things up. Examples from testing: it turned \"neštyri\" into \"the sign for the number three\", and a garbled word into confused text.",
+    "<b>The bypass.</b> A question that matches a verified answer with similarity of at least 0.40 is answered even if its topic is not on the list, so adding a verified answer is the way to widen what Pier can do.",
+    "<b>An ordering trap.</b> Strict mode runs before the timetable. So the words students use for timetable and bell questions (hours, breaks, bells, timetable) must be on the allowed list, or those questions get refused before the timetable logic sees them.",
+    "<b>When it is wrong.</b> Strict mode also refuses simple general questions outside the collection (\"how many days are in a week?\"). The remedy is to add verified answers, not to loosen the model.",
+    "<b>Switching it off.</b> <code>PIER_STRICT=0</code>, for experiments only.",
+])),
+        ("components", "Components", table(["Part", "What it does"], [
+    ["Speech recognition", "Parakeet-sk int8 through sherpa-onnx, CPU only. About 0.7 GB; about 0.2 s per sentence on the PC, estimated 0.5 to 1 s on a Pi"],
+    ["Language model", "pier-e2b: a fine-tuned and pruned Gemma 4 E2B in Q4_K_M, 1.55 GB, served by Ollama (version 0.40.6 on the PC)"],
+    ["Verified answers", "414 hand-written question and answer pairs, retrieved by similarity (<code>knowledge.py</code>)"],
+    ["Voice", "OmniVoice (male, needs an NVIDIA GPU) or Piper \"lili\" (female, runs on CPU, about 60 MB)"],
+    ["Spell fix", "Rule-based correction (<code>spellfix.py</code>) with the Hunspell sk_SK dictionary"],
+    ["Time, bells, timetable, weather", "Computed in Python from the clock, the school's EduPage data and Open-Meteo, never guessed by the model"],
+    ["Window", "A full-screen web page with an SVG character, sky and clock (<code>web/</code>)"],
+    ["School facts", "Plain text files, <code>data/skola.txt</code> and <code>data/patron.txt</code>, that a teacher could edit"],
+])),
+        ("voice", "Two voices, one interface", '''
+<p>Both voice services expose the same small API (<code>/health</code> and <code>/speak</code>, port 8008), so the main program does not care which one is running.</p>
+''' + table(["", "Piper \"lili\"", "OmniVoice"], [
+    ["Voice", "Female", "Male"],
+    ["Runs on", "CPU", "NVIDIA GPU with CUDA"],
+    ["Licence", "MIT", "Weights are CC-BY-NC (non-commercial)"],
+    ["Sample rate", "22,050 Hz", "24,000 Hz"],
+    ["Used on", "The Raspberry Pi", "The Windows PC"],
+    ["Script", "<code>tts/piper_server.py</code>", "<code>tts/omni_server.py</code>"],
+]) + '''
+<p>On Windows the app starts OmniVoice by itself. If <code>PIER_TTS_URL</code> is set, no local voice is started and the remote one is used instead, which is how a Pi can borrow the PC's male voice over the private network. The sample rate is also a quick way to tell the two apart: I once benchmarked OmniVoice by mistake, thinking it was Piper, because port 8008 was already taken.</p>
+'''),
+        ("model", "Making a small model speak good Slovak", '''
 <p>An off-the-shelf small model speaks poor Slovak and invents facts. I trained my own.</p>
-{ul([
-    "<b>Pruning.</b> Gemma 4 E2B has a vocabulary of 262,144 tokens for all languages, plus audio and vision parts I do not need. I removed the audio and vision towers and cut the vocabulary to about 60,000 tokens. The model shrank from 5.1 to 2.5 billion parameters, and the quantised file is 1.56 GB instead of 4.6 GB, with each word costing roughly 15% less work.",
-    "<b>Fine-tuning.</b> LoRA training on the pruned model, on about 1,500 samples: Slovak answer style, length, refusals (\"I don't know, ask at the office\"), the persona, weather, rules and general curriculum answers. Training took about 80 minutes on the RTX 3060.",
-    "<b>Facts are not in the weights.</b> The model learned to read school facts from the prompt, including training examples where the line is missing and the right answer is \"I don't know\". When a fact changes, someone edits a text file and no retraining is needed. On changed data it scored 5 out of 5.",
-    "<b>Retrieval of verified answers.</b> A 2-billion-parameter model cannot absorb a curriculum from a few hundred answers. So at question time the closest verified answers are added to the prompt and the model rephrases them. On 20 brand-new topics it never saw, it answered 19 correctly.",
-    "<b>Strict mode.</b> Outside a set of verified topics the assistant says it has no verified answer instead of improvising. In testing, small models turned odd transcripts into confident nonsense, so refusing is the safer default.",
-])}
-<div class="pg-callout"><b>A lesson about teacher models</b><p>I first used a 12B Slovak model as a teacher to write general answers, and it invented facts (asked what the word \"var\" means, it answered \"a Slavic calendar\"). So every general answer is now written by hand, and the teacher is only used to paraphrase questions.</p></div>
-"""),
-        ("results", "Measured results", f"""
-<p>All figures come from a test set the model never saw in training. Each model got the same prompt and the same questions at temperature 0.</p>
-{table(["Model", "Correct", "Unknown words", "Response"], [
+''' + ul([
+    "<b>Pruning.</b> The original Gemma 4 E2B has 5.1 billion parameters, of which about 2.75 billion are word tables for every language and 0.45 billion are audio and vision. I removed the audio and vision towers and cut the vocabulary from 262,144 to about 60,000 tokens. The model shrank to 2.5 billion parameters, the quantised file is 1.56 GB instead of 4.6 GB, and picking a word is about 15% less work.",
+    "<b>Fine-tuning.</b> LoRA training on the pruned model with about 1,500 samples: Slovak answer style, length, refusals (\"I don't know, ask at the office\"), the persona, weather, rules and general curriculum answers. It trains only on the answer. It took about 80 minutes on the RTX 3060 at about 650 words per second.",
+    "<b>Facts are not in the weights.</b> The model learned to read school facts from the prompt, including examples where the line is missing and the correct answer is \"I don't know\". When a fact changes, someone edits a text file and no retraining is needed. On changed data it scored 5 out of 5.",
+    "<b>Retrieval of verified answers.</b> A 2-billion-parameter model cannot absorb a curriculum from a few hundred answers. So at question time the closest verified answers go into the prompt and the model rephrases them. On 20 brand-new topics it had never seen, it answered 19 correctly.",
+    "<b>Own prompt template.</b> The Modelfile has a custom template identical to the one used in training. It must not be overwritten, and its <code>FROM</code> line contains a Windows path that the Pi installer rewrites.",
+    "<b>No \"thinking\".</b> For Gemma 4 models Ollama writes the answer into a <code>thinking</code> field by default, so the app sends <code>reasoning_effort: none</code> and the evaluation script needs <code>--think-off</code>.",
+]) + '''
+<div class="pg-callout"><b>A lesson about teacher models</b><p>I first used a 12B Slovak model (OpenEuroLLM-Slovak) as a teacher to write general answers, and it invented facts (asked what the word \"var\" means, it answered \"a Slavic calendar\"). So every general answer is now written by hand in the <code>answers_*.py</code> files, and the teacher is only used to paraphrase questions.</p></div>
+<div class="pg-callout"><b>A lesson about GPU memory</b><p>When batch lengths differ, GPU memory fragments, and on a 12 GB card Windows starts spilling it into normal memory, which is about 3 times slower. Rounding each batch length up to a multiple of 128 in <code>train_lora.py</code> fixed it.</p></div>
+'''),
+        ("results", "Measured results", '''
+<p>All figures come from tests the model never saw in training. Each model got the same prompt and the same questions at temperature 0. The test grew over time (57, 62, 85 and finally 105 questions), so rows measured on different sizes are not directly comparable.</p>
+''' + table(["Model", "Correct", "Unknown words", "Response"], [
     ["gemma3:4b with examples (3.4 GB)", "72 / 85", "3.9%", "1.7 s"],
     ["Original Gemma 4 E2B with examples (4.6 GB)", "62 / 85", "5.0%", "1.5 s"],
+    ["Original Gemma 4 E2B without examples", "61 / 85", "4.3%", "1.5 s"],
     ["pier-e2b, round 1 (fine-tuned, pruned, 1.6 GB)", "76 / 85", "5.3%", "1.3 s"],
-    ["pier-e2b, round 2 (plus verified answers)", "79 / 85", "2.6%", "1.3 s"],
+    ["pier-e2b, round 2 (plus 287 verified answers)", "79 / 85", "2.6%", "1.3 s"],
     ["gemma3:4b with examples and verified answers", "78 / 85", "3.4%", "2.1 s"],
-    ["<b>pier-e2b deployed (414 answers, spell fix, 105-question test)</b>", "<b>98 / 105</b>", "<b>2.2%</b>", "<b>1.3 s</b>"],
+    ["pier-e2b round 3 (continued from round 2, not used)", "77 / 85", "3.0%", "1.3 s"],
+    ["pier-e2b round 2 plus 414 answers (105-question test)", "98 / 105", "2.5%", "1.3 s"],
+    ["<b>pier-e2b deployed (414 answers plus spell fix)</b>", "<b>98 / 105</b>", "<b>2.2%</b>", "<b>1.3 s</b>"],
+]) + '''
+<p>Inside the 105-question test, the deployed model scores: facts 18 of 20, traps 10 of 10, changed data 5 of 5, general questions 15 of 18, taught topics 23 of 23, new topics without training 19 of 20, rules 3 of 3, weather 3 of 3, persona 2 of 3. The column that matters for a fair comparison is the 62 questions that are new to every model, where gemma3:4b with examples scores 57 (55 once it gets the same verified answers) and pier-e2b scores 56.</p>
+<p>With the same help, gemma3:4b and pier-e2b score about the same (78 and 79 out of 85). But pier-e2b is half the size and needs half the prompt, which is what lets it fit on a Raspberry Pi. gemma3:4b is slightly better on general questions outside the list (17 against 15 out of 18).</p>
+'''),
+        ("experiments", "Experiments and what they decided", table(["Experiment", "Result", "Decision"], [
+    ["Quantisation Q4_K_M, Q5_K_M, Q6_K", "All 79 of 85. Q5 is 12% and Q6 25% bigger; speed on 4 CPU threads is 25, 23 and 20 words per second", "Stay on Q4_K_M"],
+    ["Temperature 0, 0.1, 0.3", "98 to 99 of 105, the same within noise", "Stay on 0.3"],
+    ["Round 3 of training with unrelated records in the prompt", "77 against 79", "Not used"],
+    ["Verified answers 287 to 414", "No retraining needed; 19 of 20 new topics correct; the old test did not get worse", "Keep adding answers, not retraining"],
+    ["Spell-fix with dictionary suggestions", "Broke names (\"Merkur\" to \"Merku\", \"Pier\" to \"Pieta\")", "Discarded; rules-only version kept"],
+    ["Select only relevant school facts per question", "Would cut 2 to 3 s on a Pi but needs a short new fine-tune", "Not done yet"],
+])),
+        ("performance", "Speed and memory", f"""
+{table(["Measure", "Value", "Status"], [
+    ["Prompt read at start (PC, CPU, 4 threads, Piper)", "9 s", "Measured"],
+    ["End of question to first text (same setup)", "1.5 to 3.1 s", "Measured"],
+    ["Generation speed (PC, 4 threads, Q4_K_M)", "25 words per second", "Measured"],
+    ["Raspberry Pi 5 versus that setup", "2.5 to 3.5 times slower", "Estimate"],
+    ["Pi start", "about 30 s", "Estimate"],
+    ["Pi answer", "5 to 10 s", "Estimate"],
+    ["Pi generation speed", "7 to 9 words per second", "Estimate"],
+    ["Speech recognition per sentence", "about 0.2 s on the PC; 0.5 to 1 s on a Pi", "Measured; estimate"],
 ])}
-<p>With the same help, gemma3:4b and pier-e2b score about the same (78 and 79 out of 85). But pier-e2b is half the size and needs half the prompt, which is what lets it fit on a Raspberry Pi. Other experiments: Q5 and Q6 quantisation gave the same accuracy as Q4 with a bigger and slower model, so Q4_K_M stayed; temperatures 0, 0.1 and 0.3 gave the same results within noise; and a third training round with unrelated records in the prompt did not help (77 against 79), so I did not use it.</p>
+<p>Memory budget on the Pi: the model 1.6 GB, its context about 0.5 GB, Parakeet 0.7 GB, the voice about 0.3 GB and the system about 1 GB, so around 4 GB of the 8 GB. The first start after power-on is slower because the model reads the roughly 1,000-token prompt once, then Ollama remembers it.</p>
 """),
-        ("face", "The face", f"""
-<p>The first version used a real photo with a WebGL effect. I replaced it with an illustrated SVG character because the patron is famous as a mountaineer (\"Verso l'alto\", towards the top) and a cartoon climber fits a school app better than an uncanny photo. The photo version is kept in a backup folder.</p>
-{ul([
-    "A round medallion with a halo, a pipe and an ice axe, drawn entirely in SVG.",
-    "Head, eyes and mouth are driven by the app's state and the voice level while it speaks. The hand lifts the pipe away while it thinks and speaks.",
+        ("face", "The face", '''
+<p>The first version used a real photo with a WebGL effect. I replaced it with an illustrated SVG character because the patron is famous as a mountaineer ("Verso l'alto", towards the top) and a cartoon climber fits a school app better than an uncanny photo. The photo version is kept in a backup folder.</p>
+''' + ul([
+    "A round medallion with a halo, a pipe and an ice axe, drawn entirely in SVG (<code>web/avatar.js</code>, about 290 lines).",
+    "Head, eyes and mouth are driven by the app's state and the voice level while it speaks (<code>web/app.js</code>). The hand lifts the pipe away while it thinks and speaks.",
     "The sky and the sun position follow the real time in Bratislava. A <code>?time=HH:MM</code> parameter previews any hour.",
+    "The screen shows a clock card at the top left, a status pill at the top and the speech bubble near the mouth.",
     "Only public-domain artwork is used. Paintings with a watermark were rejected.",
-])}
+]) + '''
 <div class="pg-fig-row">
-{fig("pier-day.webp", "Midday sky, using the time preview.")}
-{fig("pier-dusk.webp", "Dusk, using the time preview.")}
+''' + fig("pier-day.webp", "Midday sky, using the time preview.") + fig("pier-dusk.webp", "Dusk, using the time preview.") + '''
 </div>
-"""),
-        ("deterministic", "Things the model never guesses", """
-<p>Clocks and timetables are facts, so Python computes them and the model is never asked. The time and date come from the machine clock; bell times and the class timetable come from the school's EduPage data; weather comes from Open-Meteo for Bratislava, with no key. When speech recognition garbles a class name, the app does not guess; it answers with a fixed request to repeat it. I also learned a subtle ordering rule: the strict-topic check runs before the timetable, so the words students use for timetable questions must be on the allowed list.</p>
-"""),
+'''),
+        ("deterministic", "Things the model never guesses", '''
+<p>Clocks and timetables are facts, so Python computes them and the model is never asked. The time and date come from the machine clock; bell times and the class timetable come from the school's EduPage data (a 370-line module, <code>timetable.py</code>); weather comes from Open-Meteo for Bratislava, with no key. When speech recognition garbles a class name, the app does not guess a time; it answers with a fixed request to repeat it.</p>
+<p>The spell-fix pass is deliberately cautious. It only restores missing diacritics, i versus y, and the Czech <code>o</code> that small models write instead of <code>a</code>, and only when exactly one candidate fits. That cut unknown words from 2.5% to 2.2% without damaging any names.</p>
+'''),
+        ("layout", "Project layout", table(["Path", "What it is"], [
+    ["<code>pier_ai.py</code>", "The whole program: routing, microphone, language model, voice and HTTP server"],
+    ["<code>school_prompt.py</code>, <code>knowledge.py</code>, <code>slovak_text.py</code>, <code>spellfix.py</code>, <code>timetable.py</code>", "The prompt, verified-answer retrieval, Slovak text preparation for the voice, spell-fix, and the timetable"],
+    ["<code>data/skola.txt</code>, <code>data/patron.txt</code>", "Facts about the school and the patron, as plain editable text"],
+    ["<code>data/znalosti.jsonl</code>, <code>data/slovnik/</code>", "414 verified answers, and the Hunspell sk_SK dictionary"],
+    ["<code>web/</code>", "The screen: <code>app.js</code>, <code>avatar.js</code>, <code>style.css</code>"],
+    ["<code>tts/</code>", "The two voice services (<code>piper_server.py</code>, <code>omni_server.py</code>)"],
+    ["<code>pi/</code>", "<code>install.sh</code>, the <code>pier-ai.sh</code> kiosk launcher, <code>autostart.sh</code>, <code>stiahni-hlas.sh</code>, and <code>pripravit-balik.ps1</code> that builds the bundle on Windows"],
+    ["<code>train/</code>", "Training and tests, only on my home PC: <code>build_knowledge.py</code>, <code>answers_1..5.py</code>, <code>test_set.py</code>, <code>evaluate.py</code>, <code>VYSLEDKY.md</code>"],
+    ["<code>PierAI.cs</code>, <code>Pier AI.exe</code>", "The Windows launcher that opens the Edge window"],
+])),
+        ("config", "Configuration", '''
+<p>Behaviour is controlled by environment variables. On the Pi they live in <code>~/.config/pier-ai.env</code>.</p>
+''' + table(["Variable", "Meaning"], [
+    ["<code>PIER_MODEL</code>", "Which Ollama model to use, for example <code>gemma3:4b</code>"],
+    ["<code>PIER_FEWSHOT</code>", "<code>0</code> for the fine-tuned model; <code>1</code> adds worked examples to the prompt for other models"],
+    ["<code>PIER_KB</code>", "<code>0</code> turns the verified answers off"],
+    ["<code>PIER_STRICT</code>", "Strict mode; on by default, <code>0</code> turns it off"],
+    ["<code>PIER_TTS_URL</code>", "Use a remote voice service instead of starting a local one"],
+    ["<code>PIER_VOICE_CHECK</code>", "Checks each sentence with the recogniser; switched off on the Pi (<code>0</code>)"],
+    ["<code>PIER_MIC</code>, <code>PIER_SPEAKER</code>", "Microphone and speaker, by number or part of the name (list them with <code>python -m sounddevice</code>)"],
+])),
+        ("maintain", "Keeping it up to date", '''
+<p>The school does not need me or a graphics card to improve it.</p>
+''' + ul([
+    "<b>New facts about the school</b> go into <code>data/skola.txt</code>, which is read from the prompt. The model learned to read facts even when they change, so a new line works immediately.",
+    "<b>New verified answers</b> are one line each in <code>data/znalosti.jsonl</code> in the form below. Write 1 to 2 sentences in standard Slovak with no invented facts. They work immediately without retraining.",
+]) + code('{"question": "...", "answer": "..."}') + '''
+<p>One trap: at home I keep the same answers in <code>train/answers_*.py</code> and a build script generates <code>znalosti.jsonl</code> from them, <b>overwriting</b> it. Additions made directly in the school file therefore have to be copied into the answer files, or the next build erases them.</p>
+'''),
         ("privacy", "Privacy and licensing decisions", ul([
-            "No transcript and no audio is ever written to disk. The launcher discards output and the voice services print nothing.",
-            "The assistant refuses to reveal its own rules.",
-            "Voice licences are tracked honestly: Piper \"lili\" is MIT, Gemma 4 is Apache-2.0, and the OmniVoice male voice is non-commercial (CC-BY-NC), so it needs an assessment from the school's data-protection officer before it is used there.",
-        ])),
-        ("pi", "The Raspberry Pi plan", f"""
-<p>I prepared a 2.2 GB bundle with an installer, a kiosk launcher that opens the screen in full-screen Chromium, and an autostart script. On the Pi the voice would be the female Piper voice, running on CPU.</p>
-<p>These are estimates, not measurements, because it has never run on real hardware: about 30 seconds to start and 5 to 10 seconds per answer, using roughly 4 GB of the 8 GB. Simulating a Pi on a PC (4 threads, no GPU) gave 1.5 to 3.1 seconds to the first text, and a Pi 5 is 2.5 to 3.5 times slower than that. The first things to check on the device are whether the ARM packages install, whether Ollama recognises the model architecture, the real speed and temperature, and the microphone levels.</p>
-"""),
+    "No transcript and no audio is ever written to disk. The launcher discards output and the voice services print nothing. Logging recognised questions would need the school's agreement first.",
+    "The assistant refuses to reveal its own rules.",
+    "The portrait is public-domain only.",
+    "Licences are tracked honestly: Piper \"lili\" is MIT, Gemma 4 is Apache-2.0, and the OmniVoice weights are CC-BY-NC, so the male voice needs an assessment from the school's data-protection officer before it is used there.",
+])),
+        ("pi", "The Raspberry Pi plan", '''
+<p>The target is a Raspberry Pi 5 with 8 GB, active cooling and the original 27 W supply, a microSD card of at least 32 GB (NVMe is better), a USB microphone or headset, a speaker and a monitor, running Raspberry Pi OS 64-bit (Bookworm or newer). The installer downloads packages, Ollama and the voice, so it needs internet; weather and timetable use it permanently.</p>
+''' + steps([
+    "On Windows, a script builds a 2.2 GB bundle with the program, the language model, the recogniser and the voice service.",
+    "Copy it to the Pi by USB stick or <code>scp</code>, then run the installer. It sets up the Python environment, Ollama, the voice, the <code>pier-e2b</code> model and a menu icon.",
+    "The launcher starts Piper by itself and opens the screen in full-screen Chromium. Closing the window with Alt+F4 also stops the program.",
+    "For a wall display, the autostart script plus automatic login starts it at power-on. I can administer the Pi from a school PC over SSH with keys.",
+]) + '''
+<h3 class="pg-h3">Risks to check first, because it has never run on real hardware</h3>
+''' + ul([
+    "Whether <code>sherpa-onnx</code> and <code>piper-tts</code> have ARM packages for the Pi's Python version.",
+    "Whether Ollama on ARM is new enough to recognise the Gemma 4 architecture (the PC runs 0.40.6).",
+    "The real speed, temperature (<code>vcgencmd get_throttled</code>) and memory (<code>free -h</code>, about 4 GB expected).",
+    "The microphone: the speech threshold is tuned to a PC headset, and devices must be selected with the variables above.",
+]) + '''
+<h3 class="pg-h3">If it turns out too slow</h3>
+''' + ul([
+    "Shorten the prompt and the answers.",
+    "Lower <code>num_ctx</code> in the Modelfile.",
+    "Put only the relevant school facts into the prompt, which needs a short new fine-tune on the PC.",
+    "A male voice on the Pi is not available yet, because there is no good Slovak male voice that runs without a GPU.",
+]) + '''
+'''),
         ("issues", "Known issues", ul([
-            "Speech recognition errors can turn into a refusal or a request to repeat the question.",
-            "Strict mode also refuses simple general questions outside the verified set. The remedy is to add verified answers, not to loosen the model.",
-            "Piper's female voice has softer word starts that the recogniser sometimes mishears.",
-            "Holidays are not in the timetable logic. Weather is fixed to Bratislava.",
-        ])),
+    "Speech recognition errors can turn into a refusal or into \"I did not understand the whole question\". I saw this with synthetic questions and it is not always repeatable.",
+    "Strict mode also refuses simple general questions outside the verified set.",
+    "Piper's female voice has softer word starts that the recogniser sometimes mishears (\"Veľká\" heard as \"dvetka\"), which is why the sentence check is off on the Pi.",
+    "A single word that is not a greeting gets \"say the whole question\", and an unknown word in \"what does X mean\" gets \"I do not know it\".",
+    "Holidays and school breaks are not in the timetable logic. Weather is fixed to Bratislava.",
+    "Training and the large models exist only on my home PC; at school only the app and the data can be changed.",
+])),
+        ("pitfalls", "Engineering pitfalls", ul([
+    "<b>A full disk emptied a file.</b> While testing quantisations the disk filled up and a file was silently truncated. Temporary GGUF and Ollama copies are deleted immediately after each experiment.",
+    "<b>A regular expression that never matched.</b> One with doubled slashes never matched, and an alternation joined with <code>||</code> was always true. Every new regex is tested on positive and negative examples.",
+    "<b>Port 8008</b> is taken by OmniVoice while the app runs, so Piper has to be tried on another port, for example 8009.",
+    "<b>Windows only.</b> <code>creationflags</code> for <code>subprocess.Popen</code> exists only on Windows (fixed).",
+    "<b>Line endings.</b> Shell scripts must have LF endings, which the bundle script enforces. Editing files through scripts also needs care with CRLF and with <code>\\U</code> in Windows paths inside Python strings.",
+])),
+        ("roadmap", "Roadmap, in priority order", steps([
+    "Run it on the Pi, measure the speed and fix whatever breaks.",
+    "Shorten the prompt or answers if it is slow.",
+    "Add about 200 more verified answers, based on what students actually ask.",
+    "Relax strict mode where it refuses without need, using real questions, without writing recognised questions to disk unless the school agrees.",
+    "Get the OmniVoice licence assessed, with the school's data-protection officer, if the male voice is to be used at school.",
+    "Optionally: a short new fine-tune that selects only the relevant facts for the prompt, and a good male voice for the Pi.",
+])),
+        ("glossary", "Glossary", table(["Term", "Meaning"], [
+    ["LLM", "Large language model: the program that writes the answers"],
+    ["STT / TTS", "Speech to text and text to speech"],
+    ["Parakeet-sk, sherpa-onnx", "The Slovak speech recogniser and the runtime that runs it on a CPU"],
+    ["int8", "Numbers stored in 8 bits: smaller and faster, slightly less precise"],
+    ["Gemma 4 E2B", "The base model from Google (Apache-2.0)"],
+    ["Pruning", "Cutting parts of a model away: here the audio and vision parts and most of the vocabulary"],
+    ["LoRA", "A cheap way to fine-tune a model by training small extra matrices"],
+    ["Quantisation, Q4_K_M, GGUF", "Storing the weights in about 4 bits each in the GGUF file format used by llama.cpp and Ollama"],
+    ["Ollama", "A program that runs local models behind a simple API"],
+    ["Retrieval", "Finding the closest verified answers and giving them to the model"],
+    ["Strict mode", "Refusing questions outside the verified topics instead of improvising"],
+    ["SSE", "Server-sent events: how the program streams state to the screen"],
+    ["Hunspell", "An open-source spelling dictionary, here Slovak (sk_SK)"],
+    ["EduPage", "The school's timetable system the bell and timetable data come from"],
+])),
         ("learned", "What I learned", ul([
-            "A small model plus retrieval plus strict rules beats a bigger model with no guard rails for a school helper.",
-            "Test every regular expression on both positive and negative examples. One alternation joined with the wrong operator was always true and hid a bug for hours.",
-            "Disk space is a real resource when quantising models. A full disk once silently emptied a file.",
-            "Be honest about what has and has not been tested. The handover notes list the untested Raspberry Pi risks first.",
-        ])),
+    "A small model plus retrieval plus strict rules beats a bigger model with no guard rails for a school helper.",
+    "Put facts where they can be edited (text files and a retrieval collection), and put style where it must be learned (the weights).",
+    "Rules beat a clever model where the answer is checkable: clocks, timetables, weather and spelling.",
+    "Test every regular expression on both positive and negative examples.",
+    "Disk space and GPU memory are real resources when quantising and training models.",
+    "Be honest about what has and has not been tested. The handover notes list the untested Raspberry Pi risks first.",
+])),
     ],
 ))
 
