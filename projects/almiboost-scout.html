@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlmiBoost Scout | Tomáš Dobos</title>
+<meta name="description" content="A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live betwe">
+<meta name="author" content="Tomáš Dobos">
+<meta property="og:title" content="AlmiBoost Scout | Tomáš Dobos">
+<meta property="og:description" content="A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live betwe">
+<meta property="og:type" content="article">
+<meta name="theme-color" content="#e5541f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="pg">
+
+<header class="nav show" id="nav">
+  <div class="wrap nav-in">
+    <a class="nav-brand" href="../index.html">Tomáš<sup>®</sup></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#experience">Experience</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+    <a class="pg-back" href="../index.html#projects">← All projects</a>
+  </div>
+</header>
+
+<main>
+  <section class="pg-hero">
+    <div class="wrap">
+      <p class="chip"><i></i>Project 002 · Field sales tool · map · realtime</p>
+      <h1>AlmiBoost Scout</h1>
+      <p class="pg-lead">A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live between my phone and my laptop. It runs without Google's APIs and without a server of my own.</p>
+      <div class="pg-meta"><div><small>Role</small><b>Designer and developer</b></div><div><small>Timeline</small><b>Aug 2026 – present</b></div><div><small>Status</small><b>In daily use, private</b></div><div><small>Stack</small><b>Vanilla JS, Leaflet, OpenStreetMap, Supabase</b></div></div>
+      <div class="btns pg-links"></div>
+    </div>
+    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/scout-app.webp" alt="AlmiBoost Scout screenshot"></figure></div>
+  </section>
+
+  <div class="wrap pg-layout">
+    <aside class="pg-toc" aria-label="On this page"><small>On this page</small><a href="#overview">Overview</a><a href="#problem">Why I built it</a><a href="#features">What it does</a><a href="#data">The data: from Google to open data</a><a href="#streets">A better street search</a><a href="#architecture">Architecture</a><a href="#ratings">Ratings by hand</a><a href="#migration">Moving the old data</a><a href="#limits">Honest limits</a><a href="#learned">What I learned</a></aside>
+    <article class="pg-body"><section class="pg-sec" id="overview"><h2>Overview</h2>
+<p>Door-to-door selling lives and dies on two questions: where should I go next, and what happened the last time I went there? Scout answers both. It is one HTML file you open on a phone, with a bundle of 8,493 Bratislava businesses built in, a map you can use outside, and a shared record of every pitch.</p>
+<p>It is a private tool, so there is no public link. The screenshot below is the real app showing about eight thousand businesses on the map.</p>
+</section><section class="pg-sec" id="problem"><h2>Why I built it</h2><ul class="pg-list"><li>I needed to find streets full of the right kind of business: hair salons, cafés, bars, bakeries and small shops.</li><li>I needed to remember what I said, who was closed, who asked me to come back, and who bought.</li><li>I wanted the phone in my pocket and the laptop at home to show the same data, instantly.</li><li>I wanted to know what the whole effort cost and earned, including expenses.</li></ul></section><section class="pg-sec" id="features"><h2>What it does</h2><div class="pg-grid"><div class='pg-card'><h4>Search by type and area</h4><p>Chips for coffee, restaurants, hair salons, nail studios, beauty salons, bars, bakeries, barbershops, small supermarkets, flower shops, tattoo studios and clothing shops, combined with an area or street search and a Bratislava-only switch.</p></div><div class='pg-card'><h4>Find by name</h4><p>A separate field for looking up one named business without the category filter getting in the way.</p></div><div class='pg-card'><h4>Filters and sort</h4><p>Narrow results and sort them. The header always shows how many businesses match.</p></div><div class='pg-card'><h4>List, map and dashboard</h4><p>Three views over the same data. The map colours markers by pitch state and has a "sales only" filter.</p></div><div class='pg-card'><h4>Pitch tracking</h4><p>Open any business and record the outcome, notes and follow-up. Every change is saved and synced.</p></div><div class='pg-card'><h4>GPS and radius</h4><p>A live location dot and a radius around you so you can see what is within walking distance.</p></div><div class='pg-card'><h4>Calendar and expenses</h4><p>A calendar of pitches, an expense list and a net-revenue figure on the dashboard.</p></div><div class='pg-card'><h4>Review growth</h4><p>For every sale, how many reviews the business had then and now, which is the metric that proves the card works.</p></div></div></section><section class="pg-sec" id="data"><h2>The data: from Google to open data</h2>
+<p>The first version called Google Places for every search, Google Geocoding for every area lookup and the Google Maps JavaScript API for the map, with Firebase for storage. That meant a billing account, quotas and a recurring cost. I rebuilt it so that none of those are needed.</p>
+<div class="pg-table"><table><thead><tr><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Google Places search, a call per search</td><td>A bundled file of 8,493 businesses that ships with the app</td></tr><tr><td>Google Geocoding for areas</td><td>A bundled file of 2,448 street centrelines</td></tr><tr><td>Google Maps JavaScript map</td><td>Leaflet drawn over OpenStreetMap tiles</td></tr><tr><td>Firebase for the shared dashboard</td><td>Supabase (Postgres and Realtime)</td></tr></tbody></table></div>
+<p>I verified the result: loading the app, running a search and opening the map produces zero requests to Places, Maps, Geocoding or Firebase. The only Google-owned request left is a free font CDN.</p>
+<p>The business file is built by a script that pulls a fresh OpenStreetMap extract through Overpass and a current Overture Maps release, removes duplicates by name and proximity, maps categories onto the chips, filters out the big chains, and writes a new file. The app picks it up with no code change, so refreshing it every few months is a single command.</p>
+</section><section class="pg-sec" id="streets"><h2>A better street search</h2>
+<p>Google capped each search at 20 results per category, so a search for a long street returned a random slice. The new version finds the road itself in the street file and returns everything standing along it.</p>
+<p>That distinction matters more than it sounds. Matching the typed name against business address fields looks equivalent and is not. Gagarinova is a three-kilometre arterial lined with shops, yet only one of them lists "Gagarinova" as its address, because the rest are addressed to the side streets they front onto. Searching addresses found 1 business there; searching the road found 85. Obchodná returns 258 businesses instantly, with no paging.</p>
+<p>The search corridor is 80 metres on each side of the centreline and widens automatically when a street comes back sparse, because an arterial's shops sit further from the road than an old-town street's.</p>
+</section><section class="pg-sec" id="architecture"><h2>Architecture</h2>
+<p>Scout is deliberately a single static file with no server. Any static host works.</p>
+<ul class="pg-list"><li><b>Front end.</b> Plain JavaScript, no framework and no build step. About a hundred small functions: search, rendering, map markers, modals, the calendar, the dashboard.</li><li><b>Map.</b> Leaflet with OpenStreetMap tiles, markers redrawn from the current result list, a distance calculation for the radius filter.</li><li><b>Storage.</b> Two Supabase tables, <code>pitches</code> and <code>expenses</code>. Each row keeps the whole entry in a JSON column, so the app's data shape carries over untouched and adding a field later needs no migration. A trigger keeps the update time honest.</li><li><b>Realtime.</b> Both tables are in the Realtime publication, which is what makes a pitch marked on the phone appear on the laptop.</li><li><b>Works without a backend.</b> Until the Supabase keys are filled in, the app keeps everything on one device, so it can be tried before it is set up.</li><li><b>Password gate.</b> A front-end prompt on opening.</li></ul>
+</section><section class="pg-sec" id="ratings"><h2>Ratings by hand</h2>
+<p>I checked carefully: there is no free source of Google ratings anywhere. So each business has an "Add rating" button. You tap "Open in Maps", read the two numbers and type them in. Once a number exists, everything that depended on it still works: the high-potential badge, the filters and the review growth since a sale. On the dashboard, "Update review counts" walks through every sale one at a time, so refreshing growth is a single job rather than hunting for each shop.</p>
+<p>Copying a review link now copies a normal Google Maps search link for the business. It lands on the shop's Maps page, where "Write a review" is one tap away. The old direct link needed a Google Place ID, and keeping those would have meant going back to Google.</p>
+</section><section class="pg-sec" id="migration"><h2>Moving the old data</h2>
+<p>The old app identified businesses by Google Place ID, and the new one has its own ids. A small migration page takes an export from the old site and re-links every pitch by name and location. Anything it cannot match is kept anyway with its full history, so the dashboard totals stay correct and nothing is lost; it just will not line up with a search result.</p>
+</section><section class="pg-sec" id="limits"><h2>Honest limits</h2><ul class="pg-list"><li><b>Coverage is about 80%, not 100%.</b> Checked against 28 businesses I had actually pitched, 22 were in the free data. The misses were small or recently opened places that OpenStreetMap and Overture have not recorded. For those I search by name or add them later; a place I already pitched keeps its record regardless.</li><li><b>Ratings are manual,</b> as described above.</li><li><b>The database key is public.</b> It is embedded in the page, so the password prompt only deters casual access and does not protect the database. That is acceptable while the tool is private. If it were ever shared, the fix is Supabase Auth with real policies, and the schema file says exactly what to change.</li><li><b>Map tiles come from OpenStreetMap's own servers</b> under their usage policy, which suits one person scouting a city. Growth would mean switching one tile-URL line to a paid or self-hosted provider.</li></ul></section><section class="pg-sec" id="learned"><h2>What I learned</h2><ul class="pg-list"><li>Open data goes a long way once you merge two sources and deduplicate carefully.</li><li>Constraints can improve a product: dropping Google forced a street search that is better than the paid one.</li><li>Be honest about security. Writing down exactly what the public key exposes made it easy to decide when it would need to change.</li><li>A tool you use every day tells you what to fix. Most features here exist because a visit went wrong without them.</li></ul></section></article>
+  </div>
+
+  <section class="pg-next">
+    <div class="wrap">
+      <small>Next project</small>
+      <a href="pier-ai.html">Pier AI <i>→</i></a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="../index.html#contact">Get in touch</a></div>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>

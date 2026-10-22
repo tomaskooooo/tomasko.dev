@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pier AI | Tomáš Dobos</title>
+<meta name="description" content="A voice assistant for my school with a face: an animated mountaineer portrait of the patron, Pier Giorgio Frassati. You talk to it in Slovak with no button">
+<meta name="author" content="Tomáš Dobos">
+<meta property="og:title" content="Pier AI | Tomáš Dobos">
+<meta property="og:description" content="A voice assistant for my school with a face: an animated mountaineer portrait of the patron, Pier Giorgio Frassati. You talk to it in Slovak with no button">
+<meta property="og:type" content="article">
+<meta name="theme-color" content="#e5541f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="pg">
+
+<header class="nav show" id="nav">
+  <div class="wrap nav-in">
+    <a class="nav-brand" href="../index.html">Tomáš<sup>®</sup></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#experience">Experience</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+    <a class="pg-back" href="../index.html#projects">← All projects</a>
+  </div>
+</header>
+
+<main>
+  <section class="pg-hero">
+    <div class="wrap">
+      <p class="chip"><i></i>Project 003 · Voice assistant · local AI · Slovak</p>
+      <h1>Pier AI</h1>
+      <p class="pg-lead">A voice assistant for my school with a face: an animated mountaineer portrait of the patron, Pier Giorgio Frassati. You talk to it in Slovak with no button, and it answers out loud and in a speech bubble. It runs on local models, and no recordings or transcripts are stored.</p>
+      <div class="pg-meta"><div><small>Role</small><b>Designer, developer, model trainer</b></div><div><small>Timeline</small><b>Oct 2026</b></div><div><small>Status</small><b>Running on Windows; Raspberry Pi version prepared</b></div><div><small>Stack</small><b>Python, sherpa-onnx, Ollama, Gemma 4 (LoRA), Piper, SVG and JS</b></div></div>
+      <div class="btns pg-links"></div>
+    </div>
+    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/pier-ai.webp" alt="Pier AI screenshot"></figure></div>
+  </section>
+
+  <div class="wrap pg-layout">
+    <aside class="pg-toc" aria-label="On this page"><small>On this page</small><a href="#overview">Overview</a><a href="#goal">The goal and the constraint</a><a href="#pipeline">What happens when you ask a question</a><a href="#components">Components</a><a href="#model">Making a small model speak good Slovak</a><a href="#results">Measured results</a><a href="#face">The face</a><a href="#deterministic">Things the model never guesses</a><a href="#privacy">Privacy and licensing decisions</a><a href="#pi">The Raspberry Pi plan</a><a href="#issues">Known issues</a><a href="#learned">What I learned</a></aside>
+    <article class="pg-body"><section class="pg-sec" id="overview"><h2>Overview</h2>
+<p>Pier AI is the voice of CSOŠE, the Frassati church technical secondary school in Bratislava. Students talk to it in Slovak. It knows facts about the school, tells the time and the bell schedule, reads out the timetable, gives the weather, answers questions from the curriculum and tells jokes. It deliberately refuses to answer what it has no verified answer for.</p>
+<p>The mascot is the school's patron, Pier Giorgio Frassati, drawn as the mountaineer he was. The sky behind him follows the real Bratislava sun, so the scene changes through the day.</p>
+</section><section class="pg-sec" id="goal"><h2>The goal and the constraint</h2>
+<p>The decision I made early was that everything must run on a Raspberry Pi 5 (8 GB) with no PC, so a school could put it on a wall without a gaming machine or a cloud bill. That one constraint shaped every other choice: a small model, CPU speech recognition, and no dependence on paid services.</p>
+<p>Today the full version runs on my home PC (RTX 3060) with a male voice. A Raspberry Pi package is prepared, but I have not yet run it on a real Pi, and I say so on purpose.</p>
+</section><section class="pg-sec" id="pipeline"><h2>What happens when you ask a question</h2>
+<ol class="pg-steps"><li><div><b>Listen.</b> The microphone is always on. No button is needed; the app detects speech.</div></li><li><div><b>Transcribe.</b> Parakeet-sk (int8, via sherpa-onnx) turns Slovak speech into text on the CPU. Audio is never written to disk.</div></li><li><div><b>Fix names.</b> Speech models mangle names ("farsati"), so the transcript is corrected to Frassati and similar.</div></li><li><div><b>Route.</b> Python checks, in order: is this a time or date question, a "what does this word mean" question for a non-Slovak word, a single unclear word, a topic outside the allowed ones, or a timetable and bell question.</div></li><li><div><b>Retrieve.</b> Otherwise the two closest verified answers from a 414-entry knowledge file are found by text similarity and put into the prompt.</div></li><li><div><b>Generate.</b> The local language model answers in a sentence or two, streaming sentence by sentence.</div></li><li><div><b>Clean up.</b> A spell-fix pass restores missing diacritics and common small-model mistakes, only when the correction is unambiguous.</div></li><li><div><b>Speak.</b> Each sentence is sent to a text-to-speech service that returns audio for the speaker.</div></li><li><div><b>Show.</b> The screen is a web page; the app streams state changes to it over server-sent events, and the face moves its mouth, eyes and head to match.</div></li></ol>
+</section><section class="pg-sec" id="components"><h2>Components</h2><div class="pg-table"><table><thead><tr><th>Part</th><th>What it does</th></tr></thead><tbody><tr><td>Speech recognition</td><td>Parakeet-sk int8 through sherpa-onnx, CPU only, roughly 0.7 GB</td></tr><tr><td>Language model</td><td>pier-e2b: a fine-tuned and pruned Gemma 4 E2B, 1.6 GB, served by Ollama</td></tr><tr><td>Verified answers</td><td>414 hand-written question and answer pairs, retrieved by similarity</td></tr><tr><td>Voice</td><td>OmniVoice (male, needs an NVIDIA GPU) or Piper "lili" (female, runs on CPU)</td></tr><tr><td>Spell fix</td><td>Rule-based correction with a Slovak Hunspell dictionary</td></tr><tr><td>Time, bells, timetable, weather</td><td>Computed in Python from the clock, the school's EduPage data and Open-Meteo, never guessed by the model</td></tr><tr><td>Window</td><td>A full-screen web page with an SVG character, sky and clock</td></tr><tr><td>School facts</td><td>Plain text files that a teacher could edit</td></tr></tbody></table></div></section><section class="pg-sec" id="model"><h2>Making a small model speak good Slovak</h2>
+<p>An off-the-shelf small model speaks poor Slovak and invents facts. I trained my own.</p>
+<ul class="pg-list"><li><b>Pruning.</b> Gemma 4 E2B has a vocabulary of 262,144 tokens for all languages, plus audio and vision parts I do not need. I removed the audio and vision towers and cut the vocabulary to about 60,000 tokens. The model shrank from 5.1 to 2.5 billion parameters, and the quantised file is 1.56 GB instead of 4.6 GB, with each word costing roughly 15% less work.</li><li><b>Fine-tuning.</b> LoRA training on the pruned model, on about 1,500 samples: Slovak answer style, length, refusals ("I don't know, ask at the office"), the persona, weather, rules and general curriculum answers. Training took about 80 minutes on the RTX 3060.</li><li><b>Facts are not in the weights.</b> The model learned to read school facts from the prompt, including training examples where the line is missing and the right answer is "I don't know". When a fact changes, someone edits a text file and no retraining is needed. On changed data it scored 5 out of 5.</li><li><b>Retrieval of verified answers.</b> A 2-billion-parameter model cannot absorb a curriculum from a few hundred answers. So at question time the closest verified answers are added to the prompt and the model rephrases them. On 20 brand-new topics it never saw, it answered 19 correctly.</li><li><b>Strict mode.</b> Outside a set of verified topics the assistant says it has no verified answer instead of improvising. In testing, small models turned odd transcripts into confident nonsense, so refusing is the safer default.</li></ul>
+<div class="pg-callout"><b>A lesson about teacher models</b><p>I first used a 12B Slovak model as a teacher to write general answers, and it invented facts (asked what the word "var" means, it answered "a Slavic calendar"). So every general answer is now written by hand, and the teacher is only used to paraphrase questions.</p></div>
+</section><section class="pg-sec" id="results"><h2>Measured results</h2>
+<p>All figures come from a test set the model never saw in training. Each model got the same prompt and the same questions at temperature 0.</p>
+<div class="pg-table"><table><thead><tr><th>Model</th><th>Correct</th><th>Unknown words</th><th>Response</th></tr></thead><tbody><tr><td>gemma3:4b with examples (3.4 GB)</td><td>72 / 85</td><td>3.9%</td><td>1.7 s</td></tr><tr><td>Original Gemma 4 E2B with examples (4.6 GB)</td><td>62 / 85</td><td>5.0%</td><td>1.5 s</td></tr><tr><td>pier-e2b, round 1 (fine-tuned, pruned, 1.6 GB)</td><td>76 / 85</td><td>5.3%</td><td>1.3 s</td></tr><tr><td>pier-e2b, round 2 (plus verified answers)</td><td>79 / 85</td><td>2.6%</td><td>1.3 s</td></tr><tr><td>gemma3:4b with examples and verified answers</td><td>78 / 85</td><td>3.4%</td><td>2.1 s</td></tr><tr><td><b>pier-e2b deployed (414 answers, spell fix, 105-question test)</b></td><td><b>98 / 105</b></td><td><b>2.2%</b></td><td><b>1.3 s</b></td></tr></tbody></table></div>
+<p>With the same help, gemma3:4b and pier-e2b score about the same (78 and 79 out of 85). But pier-e2b is half the size and needs half the prompt, which is what lets it fit on a Raspberry Pi. Other experiments: Q5 and Q6 quantisation gave the same accuracy as Q4 with a bigger and slower model, so Q4_K_M stayed; temperatures 0, 0.1 and 0.3 gave the same results within noise; and a third training round with unrelated records in the prompt did not help (77 against 79), so I did not use it.</p>
+</section><section class="pg-sec" id="face"><h2>The face</h2>
+<p>The first version used a real photo with a WebGL effect. I replaced it with an illustrated SVG character because the patron is famous as a mountaineer ("Verso l'alto", towards the top) and a cartoon climber fits a school app better than an uncanny photo. The photo version is kept in a backup folder.</p>
+<ul class="pg-list"><li>A round medallion with a halo, a pipe and an ice axe, drawn entirely in SVG.</li><li>Head, eyes and mouth are driven by the app's state and the voice level while it speaks. The hand lifts the pipe away while it thinks and speaks.</li><li>The sky and the sun position follow the real time in Bratislava. A <code>?time=HH:MM</code> parameter previews any hour.</li><li>Only public-domain artwork is used. Paintings with a watermark were rejected.</li></ul>
+<div class="pg-fig-row">
+<figure class="pg-fig"><img src="../assets/projects/pier-day.webp" alt="Midday sky, using the time preview." loading="lazy"><figcaption>Midday sky, using the time preview.</figcaption></figure>
+<figure class="pg-fig"><img src="../assets/projects/pier-dusk.webp" alt="Dusk, using the time preview." loading="lazy"><figcaption>Dusk, using the time preview.</figcaption></figure>
+</div>
+</section><section class="pg-sec" id="deterministic"><h2>Things the model never guesses</h2>
+<p>Clocks and timetables are facts, so Python computes them and the model is never asked. The time and date come from the machine clock; bell times and the class timetable come from the school's EduPage data; weather comes from Open-Meteo for Bratislava, with no key. When speech recognition garbles a class name, the app does not guess; it answers with a fixed request to repeat it. I also learned a subtle ordering rule: the strict-topic check runs before the timetable, so the words students use for timetable questions must be on the allowed list.</p>
+</section><section class="pg-sec" id="privacy"><h2>Privacy and licensing decisions</h2><ul class="pg-list"><li>No transcript and no audio is ever written to disk. The launcher discards output and the voice services print nothing.</li><li>The assistant refuses to reveal its own rules.</li><li>Voice licences are tracked honestly: Piper "lili" is MIT, Gemma 4 is Apache-2.0, and the OmniVoice male voice is non-commercial (CC-BY-NC), so it needs an assessment from the school's data-protection officer before it is used there.</li></ul></section><section class="pg-sec" id="pi"><h2>The Raspberry Pi plan</h2>
+<p>I prepared a 2.2 GB bundle with an installer, a kiosk launcher that opens the screen in full-screen Chromium, and an autostart script. On the Pi the voice would be the female Piper voice, running on CPU.</p>
+<p>These are estimates, not measurements, because it has never run on real hardware: about 30 seconds to start and 5 to 10 seconds per answer, using roughly 4 GB of the 8 GB. Simulating a Pi on a PC (4 threads, no GPU) gave 1.5 to 3.1 seconds to the first text, and a Pi 5 is 2.5 to 3.5 times slower than that. The first things to check on the device are whether the ARM packages install, whether Ollama recognises the model architecture, the real speed and temperature, and the microphone levels.</p>
+</section><section class="pg-sec" id="issues"><h2>Known issues</h2><ul class="pg-list"><li>Speech recognition errors can turn into a refusal or a request to repeat the question.</li><li>Strict mode also refuses simple general questions outside the verified set. The remedy is to add verified answers, not to loosen the model.</li><li>Piper's female voice has softer word starts that the recogniser sometimes mishears.</li><li>Holidays are not in the timetable logic. Weather is fixed to Bratislava.</li></ul></section><section class="pg-sec" id="learned"><h2>What I learned</h2><ul class="pg-list"><li>A small model plus retrieval plus strict rules beats a bigger model with no guard rails for a school helper.</li><li>Test every regular expression on both positive and negative examples. One alternation joined with the wrong operator was always true and hid a bug for hours.</li><li>Disk space is a real resource when quantising models. A full disk once silently emptied a file.</li><li>Be honest about what has and has not been tested. The handover notes list the untested Raspberry Pi risks first.</li></ul></section></article>
+  </div>
+
+  <section class="pg-next">
+    <div class="wrap">
+      <small>Next project</small>
+      <a href="song-finder.html">Song finder <i>→</i></a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="../index.html#contact">Get in touch</a></div>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>

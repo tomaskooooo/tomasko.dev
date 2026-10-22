@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlmiBoost | Tomáš Dobos</title>
+<meta name="description" content="NFC cards that turn one phone tap into a Google review. I built the whole thing around them: the online shop, a 3D card designer, payments, invoices and an">
+<meta name="author" content="Tomáš Dobos">
+<meta property="og:title" content="AlmiBoost | Tomáš Dobos">
+<meta property="og:description" content="NFC cards that turn one phone tap into a Google review. I built the whole thing around them: the online shop, a 3D card designer, payments, invoices and an">
+<meta property="og:type" content="article">
+<meta name="theme-color" content="#e5541f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../style.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="pg">
+
+<header class="nav show" id="nav">
+  <div class="wrap nav-in">
+    <a class="nav-brand" href="../index.html">Tomáš<sup>®</sup></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#experience">Experience</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+    <a class="pg-back" href="../index.html#projects">← All projects</a>
+  </div>
+</header>
+
+<main>
+  <section class="pg-hero">
+    <div class="wrap">
+      <p class="chip"><i></i>Project 001 · NFC review cards · web shop · sales</p>
+      <h1>AlmiBoost</h1>
+      <p class="pg-lead">NFC cards that turn one phone tap into a Google review. I built the whole thing around them: the online shop, a 3D card designer, payments, invoices and an admin panel, plus the hardware sourcing and the door-to-door sales behind it.</p>
+      <div class="pg-meta"><div><small>Role</small><b>Co-founder &amp; CTO</b></div><div><small>Timeline</small><b>Jun 2026 – present</b></div><div><small>Status</small><b>Live, taking orders</b></div><div><small>Stack</small><b>Next.js, React, TypeScript, Tailwind, Postgres, Vercel</b></div></div>
+      <div class="btns pg-links"><a class="btn-or" href="https://www.almiboost.com/" target="_blank" rel="noopener">Visit almiboost.com <i>↗</i></a></div>
+    </div>
+    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/almiboost-cover.webp" alt="AlmiBoost screenshot"></figure></div>
+  </section>
+
+  <div class="wrap pg-layout">
+    <aside class="pg-toc" aria-label="On this page"><small>On this page</small><a href="#overview">Overview</a><a href="#problem">The problem</a><a href="#product">The product line</a><a href="#built">What I built</a><a href="#architecture">How an order flows through the system</a><a href="#configurator">The custom card designer</a><a href="#data">Data model</a><a href="#security">Security and correctness decisions</a><a href="#seo">Search and structured data</a><a href="#hardware">Hardware and supply chain</a><a href="#sales">Selling it</a><a href="#learned">What I learned</a><a href="#next">What is next</a></aside>
+    <article class="pg-body"><section class="pg-sec" id="overview"><h2>Overview</h2>
+<p>AlmiBoost sells small NFC cards to local businesses. A customer holds a phone against the card and the Google review form for that business opens straight away. There is no app, no QR code and no searching for the profile. The cards are programmed for each customer's own Google profile before they ship.</p>
+<p>The company is run by three students, and I am the CTO. That means I own the technical side end to end: the hardware supply chain, the website and shop, and a good part of the in-person selling. This page covers the website and shop in detail, because that is the largest piece of software I have shipped.</p>
+</section><section class="pg-sec" id="problem"><h2>The problem</h2>
+<p>Google reviews decide whether a customer picks one shop or the one down the street. Most owners know this, but asking for a review is awkward and the customer usually postpones it. By the time they find the profile, tap through to the form and start writing, many have given up.</p>
+<p>A QR code removes some friction but still needs the camera, a scan, and often a second tap. An NFC card removes the rest: the form is open the moment the phone touches the card. The product is simple, so the work was in making it easy to buy, easy to customise, and easy for a three-person team to fulfil without errors.</p>
+</section><section class="pg-sec" id="product"><h2>The product line</h2>
+<p>The shop sells seven stock products and a fully custom card.</p>
+<div class="pg-table"><table><thead><tr><th>Product</th><th>Details</th></tr></thead><tbody><tr><td>Standard Google review card</td><td>85 × 54 mm, the size of a payment card. Fits next to the till. From €14.99.</td></tr><tr><td>Round card</td><td>A 100 mm round sticker-style card, the most visible option on a counter. €19.99.</td></tr><tr><td>Square Google card</td><td>A square format for a counter or window.</td></tr><tr><td>Menu card</td><td>Opens a restaurant's menu on tap.</td></tr><tr><td>Instagram, TikTok, Facebook cards</td><td>Open the business's social profile on tap.</td></tr><tr><td>Custom card</td><td>Own logo, print and size, designed in the browser (see the configurator below).</td></tr></tbody></table></div>
+<p>Volume discounts apply across the whole basket: 3 pieces 10%, 5 pieces 15%, 10 pieces 20%, 20 pieces 25%. Each review-card chip is programmed for the customer's Google profile, which we look up ourselves from the business name and address, so the customer does not have to hunt for a link.</p>
+<figure class="pg-fig"><img src="../assets/projects/almiboost-product.webp" alt="A product page with a draggable 3D card, live stock status and the volume-discount selector." loading="lazy"><figcaption>A product page with a draggable 3D card, live stock status and the volume-discount selector.</figcaption></figure>
+</section><section class="pg-sec" id="built"><h2>What I built</h2><div class="pg-grid"><div class='pg-card'><h4>Storefront and product pages</h4><p>Product grid, stock badges and a 3D card viewer you can drag to rotate and double-click to flip. The 3D card uses the real millimetre dimensions of each product, so the preview matches what arrives.</p></div><div class='pg-card'><h4>Custom card configurator</h4><p>Pick one of the preset sizes (from 45 × 25 mm up to 100 mm round) or enter your own size, upload artwork, crop it in a modal, and check it for print readiness. A live price with the volume discount updates as you go.</p></div><div class='pg-card'><h4>Checkout without registration</h4><p>Cart, delivery and payment in one flow. One order can cover several businesses, each with its own address and cards, which is how a small chain or a landlord actually buys.</p></div><div class='pg-card'><h4>Online payments</h4><p>Card, Apple Pay, Google Pay and bank buttons through the GoPay gateway. Bank transfer and cash on personal pickup are also supported, and the form only offers combinations that make sense.</p></div><div class='pg-card'><h4>Delivery options</h4><p>Packeta pickup point (free above a set order value), courier, personal pickup in Bratislava, or us installing the card in person. A Packeta point picker is built into the checkout.</p></div><div class='pg-card'><h4>Invoices</h4><p>A PDF tax document is generated for each order with pdf-lib and an embedded font, so Slovak characters render correctly. All the arithmetic is done in whole cents to avoid rounding errors.</p></div><div class='pg-card'><h4>Admin panel</h4><p>A protected area to see orders, change status, trigger payment and e-mail actions, upload invoices, see stats cards and switch products in or out of stock.</p></div><div class='pg-card'><h4>Content and SEO</h4><p>Twelve blog posts and guide pages about getting Google reviews, NFC versus QR codes, and local SEO, with a sitemap, dynamic share images and rich structured data on every page.</p></div></div></section><section class="pg-sec" id="architecture"><h2>How an order flows through the system</h2>
+<p>The site is a Next.js application deployed on Vercel. Pages render on the server; mutations go through route handlers. Postgres holds orders, Vercel Blob holds uploaded designs and invoices, GoPay handles money, and a scheduled job nags unpaid orders.</p>
+<ol class="pg-steps"><li><div>The customer fills the basket or the configurator. Nothing the browser sends about price is trusted.</div></li><li><div>The order route validates the input with Zod, then recalculates the price on the server from the shared price tables: product price, volume discount, delivery price and, for custom cards, the setup fee.</div></li><li><div>The order is stored in Postgres with a short human-readable number (like #0012) from a database sequence. Custom orders also store the design file URL and a JSON spec.</div></li><li><div>For card payments the server creates a GoPay payment and redirects the customer to the secure gateway.</div></li><li><div>GoPay calls a notification endpoint. The server then asks GoPay for the real payment state instead of reading anything from the return URL, because a return URL can be edited by the customer.</div></li><li><div>Confirmation e-mail goes out through Nodemailer. In the admin panel the order shows as paid.</div></li><li><div>When the parcel ships, the invoice PDF is generated and attached; for custom orders a proof is sent first and its approval time is recorded.</div></li><li><div>A daily Vercel cron job at 08:00 finds unpaid orders and sends payment reminders.</div></li></ol>
+</section><section class="pg-sec" id="configurator"><h2>The custom card designer</h2>
+<p>This was the most interesting part to build, because it has to be pleasant for a shop owner and strict enough for a printer.</p>
+<ul class="pg-list"><li><b>Sizes and limits.</b> Eight presets plus a free-size mode with minimum and maximum edges and a maximum area. All cards are PVC at payment-card thickness (0.76 mm). A size flag lets us switch off a format the supplier cannot deliver by editing one line, so the picker never offers something we cannot ship.</li><li><b>Artwork upload and crop.</b> The customer uploads an image and crops it in a modal. A print-readiness check calculates the effective DPI from the pixel size and the physical size, and warns when the image is too small to print sharply.</li><li><b>3D preview.</b> The card is rendered with the uploaded art on the correct shape (rectangle with rounded corners, or circle) so the owner can rotate it before paying. Front images are prepared at 1024 px because smaller textures produced jagged edges when the browser scaled them down.</li><li><b>Proof and consent.</b> A proof is sent before production and both the sent and approved times are stored. That record matters legally: made-to-order goods are excluded from the right to withdraw only if they were made to the customer's approved specification.</li><li><b>Pricing.</b> Price per piece by size, volume discount on the total, and a one-time design setup fee that is waived from five pieces. The same pricing module is used by the form and the API so the two can never disagree.</li></ul>
+<figure class="pg-fig"><img src="../assets/projects/almiboost-custom.webp" alt="The custom-card page: pick a size, upload artwork and spin the card in 3D." loading="lazy"><figcaption>The custom-card page: pick a size, upload artwork and spin the card in 3D.</figcaption></figure>
+</section><section class="pg-sec" id="data"><h2>Data model</h2>
+<p>One Postgres table holds orders, grown by small additive migrations so that old orders never broke:</p>
+<ul class="pg-list"><li>Customer and business fields, an <code>items</code> JSON array (product, quantity, unit price), totals, discount and delivery.</li><li>Custom-order columns: design URL, a pending-design flag, a JSON spec with sizes and artwork metadata, a setup fee, and the proof timestamps.</li><li>A <code>businesses</code> JSON column for orders that cover more than one business. The first business is also copied into the classic columns, so existing lists and search keep working.</li><li>Invoice URL and file name, payment method and payment status, and a unique human-friendly order number.</li><li>A separate <code>product_stock</code> table that the admin panel edits, so availability is a switch rather than a code change.</li></ul>
+</section><section class="pg-sec" id="security"><h2>Security and correctness decisions</h2><ul class="pg-list"><li><b>The server is the source of truth for money.</b> Delivery price, discounts and totals are recomputed on the server. A tampered request cannot buy at a different price.</li><li><b>Payment state comes from the gateway.</b> The return URL only tells the page to refresh; the paid status is read from GoPay's API.</li><li><b>Admin is protected before anything renders.</b> A proxy layer verifies a signed session cookie for every admin page, the admin API routes and the Server Actions, so an action cannot be called directly without loading the page.</li><li><b>Secrets stay in environment variables.</b> Gateway credentials and mail settings are never in the code or sent to the browser.</li><li><b>One source of truth for company data.</b> The company identity used in the footer, terms and privacy policy comes from a single module, so the pages cannot drift apart. Slovak distance-selling law requires this information to be complete and correct.</li><li><b>Honest marketing rules.</b> The copy never promises a number of reviews or star ratings. Promising either breaks Google's policy and the EU Omnibus directive, which matters for a business that sells review-collection hardware.</li></ul></section><section class="pg-sec" id="seo"><h2>Search and structured data</h2>
+<p>Because most customers find us by searching for review cards, the site is built to be understood by search engines. Each page type carries the right structured data: a local business with its social profiles on every page, products with offers (including return policy and shipping details), articles with named authors, FAQ pages with the real questions, how-to guides and breadcrumbs. Blog posts and product pages generate their own share images. I checked all pages in a crawl against the sitemap, and the one thing I deliberately do not add yet is star-rating markup, because there is no real customer review data to back it up.</p>
+</section><section class="pg-sec" id="hardware"><h2>Hardware and supply chain</h2>
+<p>The cards use NTAG213 and NTAG215 NFC chips. I source them directly from a manufacturer in Shenzhen and pay by international wire transfer. Each card is programmed with the customer's Google review link, tested with a phone, and shipped; delivery inside Slovakia takes about 3–5 working days. A replacement guarantee covers the first twelve months.</p>
+<p>Before AlmiBoost I had already built a servo-driven cabinet lock around a PN532 NFC module, so the hardware side was familiar. The hard part was not the chip but the logistics: sample orders, quality checks, and keeping stock honest on the website, which is why the stock panel exists.</p>
+</section><section class="pg-sec" id="sales"><h2>Selling it</h2>
+<p>The first customers came from door-to-door visits in Bratislava. I deliberately skipped cold calling in favour of showing the card in person. A pitch leads with the prospect's own review count compared to a competitor nearby, not with a product demo. Every visit is logged in a field tool I built for the purpose, <a href="almiboost-scout.html">AlmiBoost Scout</a>. At the time of writing, the live About page reports 15 businesses served and 26 cards sold since August 2026.</p>
+</section><section class="pg-sec" id="learned"><h2>What I learned</h2><ul class="pg-list"><li>A small shop is mostly edge cases: partial stock, multi-business orders, VAT maths, proofs for custom goods. Designing the data model for them early saved a lot of rework.</li><li>Never trust the client with money, and never trust a redirect to prove a payment.</li><li>Doing sales myself made me a better developer. Watching a shop owner try to leave a review shaped almost every decision in the checkout and the product pages.</li><li>Hardware sourcing is a project of its own: lead times, samples and quality checks need as much planning as software.</li></ul></section><section class="pg-sec" id="next"><h2>What is next</h2><ul class="pg-list"><li>Collect real customer reviews and add star-rating markup once there is genuine data behind it.</li><li>Improve the follow-up funnel, since many pitched businesses are never contacted a second time.</li><li>Extend the platform into new NFC products for small businesses.</li></ul></section></article>
+  </div>
+
+  <section class="pg-next">
+    <div class="wrap">
+      <small>Next project</small>
+      <a href="almiboost-scout.html">AlmiBoost Scout <i>→</i></a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="../index.html#contact">Get in touch</a></div>
+</footer>
+
+<script src="../script.js"></script>
+</body>
+</html>
