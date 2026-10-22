@@ -4,6 +4,7 @@
   /* ---- edit these two lines ---- */
   var EMAIL = 'tomas.dobos01@gmail.com';
   var LINKEDIN = 'https://www.linkedin.com/in/larping/';
+  var FORM_ID = '5455881671918e463d74a84821fccd06';   // FormSubmit alias, so the address is not in the request URL
   /* ------------------------------ */
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -115,8 +116,11 @@
       if (form.elements._honey && form.elements._honey.value) { say('Thanks! Your message was sent.'); return; }  // bots fill the hidden field
       var label = send.textContent;
       send.disabled = true; send.textContent = 'Sending…'; form.setAttribute('aria-busy', 'true');
-      fetch('https://formsubmit.co/ajax/' + EMAIL, {
+      var ctl = window.AbortController ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+      fetch('https://formsubmit.co/ajax/' + FORM_ID, {
         method: 'POST',
+        signal: ctl ? ctl.signal : undefined,
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ name: name, email: email, message: msg, _subject: 'Portfolio message from ' + name, _template: 'table', _captcha: 'false' })
       }).then(function (r) { return r.json().catch(function () { return {}; }); })
@@ -129,7 +133,7 @@
           }
         })
         .catch(function () { say('Could not send it from here. Please write to ', true); })
-        .then(function () { send.disabled = false; send.textContent = label; form.removeAttribute('aria-busy'); });
+        .then(function () { clearTimeout(timer); send.disabled = false; send.textContent = label; form.removeAttribute('aria-busy'); });
     });
   }
 

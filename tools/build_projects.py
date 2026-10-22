@@ -6,7 +6,7 @@ Edit the text here, run it again, and refresh the browser.
 import os, json, hashlib, base64
 from PIL import Image
 
-SITE = "https://tomasko.dev"
+SITE = "https://www.tomasko.dev"
 INLINE_JS = "document.documentElement.classList.add('js');window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};"
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
