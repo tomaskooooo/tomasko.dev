@@ -9,13 +9,21 @@
 <meta property="og:title" content="AlmiBoost Scout | Tomáš Dobos">
 <meta property="og:description" content="A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live betwe">
 <meta property="og:type" content="article">
+<link rel="canonical" href="https://tomasko.dev/projects/almiboost-scout.html">
+<meta property="og:url" content="https://tomasko.dev/projects/almiboost-scout.html">
+<meta property="og:site_name" content="Tomáš Dobos">
+<meta property="og:image" content="https://tomasko.dev/assets/projects/scout-app.webp">
+<meta property="og:image:alt" content="AlmiBoost Scout screenshot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AlmiBoost Scout | Tomáš Dobos">
+<meta name="twitter:description" content="A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live betwe">
+<meta name="twitter:image" content="https://tomasko.dev/assets/projects/scout-app.webp">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "CreativeWork", "@id": "https://tomasko.dev/projects/almiboost-scout.html#work", "name": "AlmiBoost Scout", "description": "A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live between my phone and my laptop. It runs without Google's APIs and without a server of my own.", "url": "https://tomasko.dev/projects/almiboost-scout.html", "image": "https://tomasko.dev/assets/projects/scout-app.webp", "inLanguage": "en", "creator": {"@type": "Person", "@id": "https://tomasko.dev/#me", "name": "Tomáš Dobos", "url": "https://tomasko.dev/"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://tomasko.dev/"}, {"@type": "ListItem", "position": 2, "name": "Projects", "item": "https://tomasko.dev/#projects"}, {"@type": "ListItem", "position": 3, "name": "AlmiBoost Scout", "item": "https://tomasko.dev/projects/almiboost-scout.html"}]}]}</script>
 <meta name="theme-color" content="#e5541f">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
+<link rel="preload" as="font" type="font/woff2" href="../assets/fonts/inter-tight-latin.woff2" crossorigin>
 <link rel="stylesheet" href="../style.css">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
 </head>
 <body class="pg">
 
@@ -42,7 +50,7 @@
       <div class="pg-meta"><div><small>Role</small><b>Designer and developer</b></div><div><small>Timeline</small><b>Aug 2026 – present</b></div><div><small>Status</small><b>In daily use, private</b></div><div><small>Stack</small><b>Vanilla JS, Leaflet, OpenStreetMap, Supabase</b></div></div>
       <div class="btns pg-links"></div>
     </div>
-    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/scout-app.webp" alt="AlmiBoost Scout screenshot"></figure></div>
+    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/scout-app.webp" width="1906" height="877" alt="AlmiBoost Scout screenshot" fetchpriority="high"></figure></div>
   </section>
 
   <div class="wrap pg-layout">
@@ -50,9 +58,9 @@
     <article class="pg-body"><section class="pg-sec" id="overview"><h2>Overview</h2>
 <p>Door-to-door selling lives and dies on two questions: where should I go next, and what happened the last time I went there? Scout answers both. It is one HTML file you open on a phone, with a bundle of 8,493 Bratislava businesses built in, a map you can use outside, and a shared record of every pitch.</p>
 <p>It is a private tool, so there is no public link. The screenshot below is the real app showing about eight thousand businesses on the map.</p>
-</section><section class="pg-sec" id="problem"><h2>Why I built it</h2><ul class="pg-list"><li>I needed to find streets full of the right kind of business: hair salons, cafés, bars, bakeries and small shops.</li><li>I needed to remember what I said, who was closed, who asked me to come back, and who bought.</li><li>I wanted the phone in my pocket and the laptop at home to show the same data, instantly.</li><li>I wanted to know what the whole effort cost and earned, including expenses.</li></ul></section><section class="pg-sec" id="features"><h2>What it does</h2><div class="pg-grid"><div class='pg-card'><h4>Search by type and area</h4><p>Chips for coffee, restaurants, hair salons, nail studios, beauty salons, bars, bakeries, barbershops, small supermarkets, flower shops, tattoo studios and clothing shops, combined with an area or street search and a Bratislava-only switch.</p></div><div class='pg-card'><h4>Find by name</h4><p>A separate field for looking up one named business without the category filter getting in the way.</p></div><div class='pg-card'><h4>Filters and sort</h4><p>Narrow results and sort them. The header always shows how many businesses match.</p></div><div class='pg-card'><h4>List, map and dashboard</h4><p>Three views over the same data. The map colours markers by pitch state and has a "sales only" filter.</p></div><div class='pg-card'><h4>Pitch tracking</h4><p>Open any business and record the outcome, notes and follow-up. Every change is saved and synced.</p></div><div class='pg-card'><h4>GPS and radius</h4><p>A live location dot and a radius around you so you can see what is within walking distance.</p></div><div class='pg-card'><h4>Calendar and expenses</h4><p>A calendar of pitches, an expense list and a net-revenue figure on the dashboard.</p></div><div class='pg-card'><h4>Review growth</h4><p>For every sale, how many reviews the business had then and now, which is the metric that proves the card works.</p></div></div></section><section class="pg-sec" id="data"><h2>The data: from Google to open data</h2>
+</section><section class="pg-sec" id="problem"><h2>Why I built it</h2><ul class="pg-list"><li>I needed to find streets full of the right kind of business: hair salons, cafés, bars, bakeries and small shops.</li><li>I needed to remember what I said, who was closed, who asked me to come back, and who bought.</li><li>I wanted the phone in my pocket and the laptop at home to show the same data, instantly.</li><li>I wanted to know what the whole effort cost and earned, including expenses.</li></ul></section><section class="pg-sec" id="features"><h2>What it does</h2><div class="pg-grid"><div class='pg-card'><h3>Search by type and area</h3><p>Chips for coffee, restaurants, hair salons, nail studios, beauty salons, bars, bakeries, barbershops, small supermarkets, flower shops, tattoo studios and clothing shops, combined with an area or street search and a Bratislava-only switch.</p></div><div class='pg-card'><h3>Find by name</h3><p>A separate field for looking up one named business without the category filter getting in the way.</p></div><div class='pg-card'><h3>Filters and sort</h3><p>Narrow results and sort them. The header always shows how many businesses match.</p></div><div class='pg-card'><h3>List, map and dashboard</h3><p>Three views over the same data. The map colours markers by pitch state and has a "sales only" filter.</p></div><div class='pg-card'><h3>Pitch tracking</h3><p>Open any business and record the outcome, notes and follow-up. Every change is saved and synced.</p></div><div class='pg-card'><h3>GPS and radius</h3><p>A live location dot and a radius around you so you can see what is within walking distance.</p></div><div class='pg-card'><h3>Calendar and expenses</h3><p>A calendar of pitches, an expense list and a net-revenue figure on the dashboard.</p></div><div class='pg-card'><h3>Review growth</h3><p>For every sale, how many reviews the business had then and now, which is the metric that proves the card works.</p></div></div></section><section class="pg-sec" id="data"><h2>The data: from Google to open data</h2>
 <p>The first version called Google Places for every search, Google Geocoding for every area lookup and the Google Maps JavaScript API for the map, with Firebase for storage. That meant a billing account, quotas and a recurring cost. I rebuilt it so that none of those are needed.</p>
-<div class="pg-table"><table><thead><tr><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Google Places search, a call per search</td><td>A bundled file of 8,493 businesses that ships with the app</td></tr><tr><td>Google Geocoding for areas</td><td>A bundled file of 2,448 street centrelines</td></tr><tr><td>Google Maps JavaScript map</td><td>Leaflet drawn over OpenStreetMap tiles</td></tr><tr><td>Firebase for the shared dashboard</td><td>Supabase (Postgres and Realtime)</td></tr></tbody></table></div>
+<div class="pg-table" tabindex="0"><table><thead><tr><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Google Places search, a call per search</td><td>A bundled file of 8,493 businesses that ships with the app</td></tr><tr><td>Google Geocoding for areas</td><td>A bundled file of 2,448 street centrelines</td></tr><tr><td>Google Maps JavaScript map</td><td>Leaflet drawn over OpenStreetMap tiles</td></tr><tr><td>Firebase for the shared dashboard</td><td>Supabase (Postgres and Realtime)</td></tr></tbody></table></div>
 <p>I verified the result: loading the app, running a search and opening the map produces zero requests to Places, Maps, Geocoding or Firebase. The only Google-owned request left is a free font CDN.</p>
 <p>The business file is built by a script that pulls a fresh OpenStreetMap extract through Overpass and a current Overture Maps release, removes duplicates by name and proximity, maps categories onto the chips, filters out the big chains, and writes a new file. The app picks it up with no code change, so refreshing it every few months is a single command.</p>
 </section><section class="pg-sec" id="streets"><h2>A better street search</h2>
@@ -83,5 +91,6 @@
 </footer>
 
 <script src="../script.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

@@ -3,7 +3,11 @@
 Run from the portfolio folder:  python tools/build_projects.py
 Edit the text here, run it again, and refresh the browser.
 """
-import os
+import os, json, hashlib, base64
+from PIL import Image
+
+SITE = "https://tomasko.dev"
+INLINE_JS = "document.documentElement.classList.add('js');window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};"
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "projects")
@@ -11,19 +15,25 @@ OUT = os.path.join(ROOT, "projects")
 # ---------- small HTML helpers ----------
 
 def cards(items):
-    return '<div class="pg-grid">' + "".join(f"<div class='pg-card'><h4>{t}</h4><p>{p}</p></div>" for t, p in items) + "</div>"
+    return '<div class="pg-grid">' + "".join(f"<div class='pg-card'><h3>{t}</h3><p>{p}</p></div>" for t, p in items) + "</div>"
 
 def table(head, rows):
-    h = "".join(f"<th>{c}</th>" for c in head)
+    h = "".join(f"<th>{c or '<span class=\"sr-only\">Detail</span>'}</th>" for c in head)
     r = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>" for row in rows)
-    return f'<div class="pg-table"><table><thead><tr>{h}</tr></thead><tbody>{r}</tbody></table></div>'
+    return f'<div class="pg-table" tabindex="0"><table><thead><tr>{h}</tr></thead><tbody>{r}</tbody></table></div>'
 
 def steps(items):
     return '<ol class="pg-steps">' + "".join(f"<li><div>{x}</div></li>" for x in items) + "</ol>"
 
+def dims(src):
+    with Image.open(os.path.join(ROOT, "assets", "projects", src)) as im:
+        return im.size
+
+
 def fig(src, cap, wide=False):
     cls = "pg-fig wide" if wide else "pg-fig"
-    return f'<figure class="{cls}"><img src="../assets/projects/{src}" alt="{cap}" loading="lazy"><figcaption>{cap}</figcaption></figure>'
+    w, h = dims(src)
+    return f'<figure class="{cls}"><img src="../assets/projects/{src}" width="{w}" height="{h}" alt="{cap}" loading="lazy"><figcaption>{cap}</figcaption></figure>'
 
 def callout(title, text):
     return f'<div class="pg-callout"><b>{title}</b><p>{text}</p></div>'
@@ -32,7 +42,7 @@ def ul(items):
     return '<ul class="pg-list">' + "".join(f"<li>{x}</li>" for x in items) + "</ul>"
 
 def code(text):
-    return f'<pre class="pg-code"><code>{text}</code></pre>'
+    return f'<pre class="pg-code" tabindex="0"><code>{text}</code></pre>'
 
 # ---------- project content ----------
 
@@ -485,7 +495,7 @@ PROJECTS.append(dict(
     sections=[
         ("overview", "Overview", f"""
 <p>The device has an Arduino Mega, a sound sensor, a 16×2 LCD and a button. You hold a speaker close to the sensor and press the button. The Mega records five seconds of audio and streams it to a PC over USB, the PC sends it to the AudD music-recognition service, and the answer goes back to the display. While all of that happens, the bottom row of the LCD acts as an equaliser that bounces to the music.</p>
-<pre class="pg-code lcd"><code>┌────────────────┐
+<pre class="pg-code lcd" tabindex="0"><code>┌────────────────┐
 │One Kiss (Extend│  ← title and artist, long text scrolls
 │▇█▆▅▆▄▃▄▂▃▂▂▁▁  │  ← spectrum, 16 columns = 16 frequency bands
 └────────────────┘</code></pre>
@@ -609,6 +619,43 @@ PROJECTS.append(dict(
 
 # ---------- page template ----------
 
+def jsonld(p):
+    url = f"{SITE}/projects/{p['slug']}.html"
+    graph = [
+        {"@type": "CreativeWork", "@id": url + "#work", "name": p["title"], "description": p["lead"], "url": url,
+         "image": f"{SITE}/assets/projects/{p['cover']}", "inLanguage": "en",
+         "creator": {"@type": "Person", "@id": SITE + "/#me", "name": "Tomáš Dobos", "url": SITE + "/"}},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/"},
+            {"@type": "ListItem", "position": 2, "name": "Projects", "item": SITE + "/#projects"},
+            {"@type": "ListItem", "position": 3, "name": p["title"], "item": url}]},
+    ]
+    return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
+
+
+def write_headers():
+    digest = "sha256-" + base64.b64encode(hashlib.sha256(INLINE_JS.encode("utf-8")).digest()).decode()
+    csp = ("default-src 'self'; script-src 'self' '" + digest + "'; style-src 'self' 'unsafe-inline'; "
+           "font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
+           "form-action 'self'; object-src 'none'")
+    cfg = {"headers": [
+        {"source": "/(.*)", "headers": [
+            {"key": "Content-Security-Policy", "value": csp},
+            {"key": "X-Content-Type-Options", "value": "nosniff"},
+            {"key": "X-Frame-Options", "value": "DENY"},
+            {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"},
+            {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"},
+            {"key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains"},
+            {"key": "Cross-Origin-Opener-Policy", "value": "same-origin"}]},
+        {"source": "/assets/(.*)", "headers": [{"key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400"}]},
+        {"source": "/(style\.css|script\.js)", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800"}]},
+    ]}
+    with open(os.path.join(ROOT, "vercel.json"), "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2)
+        f.write("\n")
+    print("wrote vercel.json", digest)
+
+
 def page(p, idx):
     toc = "".join(f'<a href="#{sid}">{label}</a>' for sid, label, _ in p["sections"])
     body = "".join(f'<section class="pg-sec" id="{sid}"><h2>{label}</h2>{html}</section>' for sid, label, html in p["sections"])
@@ -626,13 +673,21 @@ def page(p, idx):
 <meta property="og:title" content="{p['title']} | Tomáš Dobos">
 <meta property="og:description" content="{p['lead'][:155]}">
 <meta property="og:type" content="article">
+<link rel="canonical" href="{SITE}/projects/{p['slug']}.html">
+<meta property="og:url" content="{SITE}/projects/{p['slug']}.html">
+<meta property="og:site_name" content="Tomáš Dobos">
+<meta property="og:image" content="{SITE}/assets/projects/{p['cover']}">
+<meta property="og:image:alt" content="{p['title']} screenshot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{p['title']} | Tomáš Dobos">
+<meta name="twitter:description" content="{p['lead'][:155]}">
+<meta name="twitter:image" content="{SITE}/assets/projects/{p['cover']}">
+<script type="application/ld+json">{jsonld(p)}</script>
 <meta name="theme-color" content="#e5541f">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e5541f'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='800' font-size='15' text-anchor='middle' fill='%23fff5ec'%3ETD%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap">
+<link rel="preload" as="font" type="font/woff2" href="../assets/fonts/inter-tight-latin.woff2" crossorigin>
 <link rel="stylesheet" href="../style.css">
-<script>document.documentElement.classList.add('js');</script>
+<script>{INLINE_JS}</script>
 </head>
 <body class="pg">
 
@@ -659,7 +714,7 @@ def page(p, idx):
       <div class="pg-meta">{meta}</div>
       <div class="btns pg-links">{links}</div>
     </div>
-    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/{p['cover']}" alt="{p['title']} screenshot"></figure></div>
+    <div class="wrap"><figure class="pg-cover"><img src="../assets/projects/{p['cover']}" width="{dims(p['cover'])[0]}" height="{dims(p['cover'])[1]}" alt="{p['title']} screenshot" fetchpriority="high"></figure></div>
   </section>
 
   <div class="wrap pg-layout">
@@ -680,6 +735,7 @@ def page(p, idx):
 </footer>
 
 <script src="../script.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
 """
@@ -692,6 +748,7 @@ def main():
         with open(path, "w", encoding="utf-8") as f:
             f.write(page(p, i))
         print("wrote", os.path.relpath(path, ROOT))
+    write_headers()
 
 
 if __name__ == "__main__":

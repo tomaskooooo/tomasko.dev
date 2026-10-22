@@ -90,7 +90,7 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', updateWords);
-  onScroll();
+  requestAnimationFrame(onScroll);
 
   /* contact form opens the visitor's mail app */
   var form = document.getElementById('form');
