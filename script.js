@@ -116,13 +116,24 @@
       if (form.elements._honey && form.elements._honey.value) { say('Thanks! Your message was sent.'); return; }  // bots fill the hidden field
       var label = send.textContent;
       send.disabled = true; send.textContent = 'Sending…'; form.setAttribute('aria-busy', 'true');
+      say('Sending your message. This can take up to a minute.');
       var ctl = window.AbortController ? new AbortController() : null;
-      var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+      var slow = setTimeout(function () { send.textContent = 'Still sending…'; }, 6000);
+      var giveUp = setTimeout(function () { if (ctl) ctl.abort(); }, 90000);
+      // multipart FormData is a "simple" request: no CORS preflight, which saves a whole round trip to the slow service
+      var data = new FormData();
+      data.append('name', name);
+      data.append('email', email);
+      data.append('message', msg);
+      data.append('_subject', 'Portfolio message from ' + name);
+      data.append('_template', 'table');
+      data.append('_captcha', 'false');
+      var timedOut = false;
       fetch('https://formsubmit.co/ajax/' + FORM_ID, {
         method: 'POST',
         signal: ctl ? ctl.signal : undefined,
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ name: name, email: email, message: msg, _subject: 'Portfolio message from ' + name, _template: 'table', _captcha: 'false' })
+        headers: { 'Accept': 'application/json' },
+        body: data
       }).then(function (r) { return r.json().catch(function () { return {}; }); })
         .then(function (res) {
           if (res && (res.success === true || res.success === 'true')) {
@@ -132,8 +143,12 @@
             say('Could not send it from here. Please write to ', true);
           }
         })
-        .catch(function () { say('Could not send it from here. Please write to ', true); })
-        .then(function () { clearTimeout(timer); send.disabled = false; send.textContent = label; form.removeAttribute('aria-busy'); });
+        .catch(function (err) {
+          timedOut = !!(err && err.name === 'AbortError');
+          say(timedOut ? 'This is taking unusually long. Your message may still arrive; if you do not hear back, write to '
+                       : 'Could not send it from here. Please write to ', true);
+        })
+        .then(function () { clearTimeout(slow); clearTimeout(giveUp); send.disabled = false; send.textContent = label; form.removeAttribute('aria-busy'); });
     });
   }
 
