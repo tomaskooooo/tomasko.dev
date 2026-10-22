@@ -620,7 +620,7 @@ PROJECTS.append(dict(
 # ---------- page template ----------
 
 def jsonld(p):
-    url = f"{SITE}/projects/{p['slug']}.html"
+    url = f"{SITE}/projects/{p['slug']}"
     graph = [
         {"@type": "CreativeWork", "@id": url + "#work", "name": p["title"], "description": p["lead"], "url": url,
          "image": f"{SITE}/assets/projects/{p['cover']}", "inLanguage": "en",
@@ -638,7 +638,7 @@ def write_headers():
     csp = ("default-src 'self'; script-src 'self' '" + digest + "'; style-src 'self' 'unsafe-inline'; "
            "font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
            "form-action 'self'; object-src 'none'")
-    cfg = {"headers": [
+    cfg = {"cleanUrls": True, "headers": [
         {"source": "/(.*)", "headers": [
             {"key": "Content-Security-Policy", "value": csp},
             {"key": "X-Content-Type-Options", "value": "nosniff"},
@@ -673,8 +673,8 @@ def page(p, idx):
 <meta property="og:title" content="{p['title']} | Tomáš Dobos">
 <meta property="og:description" content="{p['lead'][:155]}">
 <meta property="og:type" content="article">
-<link rel="canonical" href="{SITE}/projects/{p['slug']}.html">
-<meta property="og:url" content="{SITE}/projects/{p['slug']}.html">
+<link rel="canonical" href="{SITE}/projects/{p['slug']}">
+<meta property="og:url" content="{SITE}/projects/{p['slug']}">
 <meta property="og:site_name" content="Tomáš Dobos">
 <meta property="og:image" content="{SITE}/assets/projects/{p['cover']}">
 <meta property="og:image:alt" content="{p['title']} screenshot">
@@ -693,15 +693,15 @@ def page(p, idx):
 
 <header class="nav show" id="nav">
   <div class="wrap nav-in">
-    <a class="nav-brand" href="../index.html">Tomáš<sup>®</sup></a>
+    <a class="nav-brand" href="/">Tomáš<sup>®</sup></a>
     <nav class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../index.html#about">About</a>
-      <a href="../index.html#projects">Projects</a>
-      <a href="../index.html#experience">Experience</a>
-      <a href="../index.html#contact">Contact</a>
+      <a href="/">Home</a>
+      <a href="/#about">About</a>
+      <a href="/#projects">Projects</a>
+      <a href="/#experience">Experience</a>
+      <a href="/#contact">Contact</a>
     </nav>
-    <a class="pg-back" href="../index.html#projects">← All projects</a>
+    <a class="pg-back" href="/#projects">← All projects</a>
   </div>
 </header>
 
@@ -731,7 +731,7 @@ def page(p, idx):
 </main>
 
 <footer class="foot">
-  <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="../index.html#contact">Get in touch</a></div>
+  <div class="foot-bar"><span>© 2026 Tomáš Dobos</span><a href="/#contact">Get in touch</a></div>
 </footer>
 
 <script src="../script.js"></script>
