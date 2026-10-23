@@ -1,0 +1,30 @@
+{
+  "name": "Tomáš Dobos",
+  "short_name": "Tomáš Dobos",
+  "description": "Portfolio of Tomáš Dobos: Claude Code expert, co-founder and CTO of AlmiBoost.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e5541f",
+  "theme_color": "#e5541f",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
