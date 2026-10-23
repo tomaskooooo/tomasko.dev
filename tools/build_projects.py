@@ -163,7 +163,7 @@ PROJECTS.append(dict(
     lead="A mobile web app I built to run door-to-door sales in Bratislava. It shows every nearby business on a map, tracks each pitch and sale, and syncs live between my phone and my laptop. It runs without Google's APIs and without a server of my own.",
     cover="scout-app.webp",
     meta=[("Role", "Designer and developer"), ("Timeline", "Aug 2026 – present"), ("Status", "In daily use, private"),
-          ("Stack", "Vanilla JS, Leaflet, OpenStreetMap, Supabase")],
+          ("Stack", "Vanilla JS, Leaflet, OpenStreetMap, Supabase, built with Claude Code")],
     links=[],
     next=("pier-ai", "Pier AI"),
     sections=[
@@ -243,7 +243,7 @@ PROJECTS.append(dict(
     lead="A voice assistant for my school with a face: an animated mountaineer portrait of the patron, Pier Giorgio Frassati. You talk to it in Slovak with no button, and it answers out loud and in a speech bubble. It runs on local models, and no recordings or transcripts are stored.",
     cover="pier-ai.webp",
     meta=[("Role", "Designer, developer, model trainer"), ("Timeline", "Oct 2026 (state as of 19 Oct)"), ("Status", "Running on Windows; Raspberry Pi bundle prepared, not yet run on a real Pi"),
-          ("Stack", "Python, sherpa-onnx, Ollama, Gemma 4 (LoRA), Piper, OmniVoice, SVG and JS")],
+          ("Stack", "Python, sherpa-onnx, Ollama, Gemma 4 (LoRA), Piper, OmniVoice, SVG and JS, built with Claude Code")],
     links=[],
     next=("song-finder", "Song finder"),
     sections=[
